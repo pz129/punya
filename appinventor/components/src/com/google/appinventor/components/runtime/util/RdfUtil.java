@@ -232,6 +232,15 @@ public final class RdfUtil {
 
   private static ResultSet executeSELECTQuery(String endpoint, Query query) {
     QueryEngineHTTP qe = QueryExecutionFactory.createServiceRequest(endpoint, query);
+    URI uri = URI.create( endpoint );
+    String userInfo = uri.getRawUserInfo();
+    if(userInfo != null && userInfo.length() != 0) {
+      if(!userInfo.contains(":")) {
+        userInfo = userInfo + ":";
+      }
+      String parts[] = userInfo.split( ":" );
+      qe.setBasicAuthentication( parts[0], parts[1].toCharArray() );
+    }
     qe.setSelectContentType("application/sparql-results+json");
     if(!query.isSelectType()) {
       Log.d(LOG_TAG, "Cannot execute query that is not SELECT");
