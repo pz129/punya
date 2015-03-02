@@ -238,6 +238,10 @@ Blockly.Field.prototype.updateTextNode_ = function() {
   var text = this.text_;
   // Empty the text element.
   goog.dom.removeChildren(/** @type {!Element} */ (this.textElement_));
+  // Substitute some text if undefined.
+  if ( text === undefined ) {
+    text = 'No Translation';
+  }
   // Replace whitespace with non-breaking spaces so the text doesn't collapse.
   text = text.replace(/\s/g, Blockly.Field.NBSP);
   if (Blockly.RTL && text) {

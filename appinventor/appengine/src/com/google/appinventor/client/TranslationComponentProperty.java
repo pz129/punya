@@ -8,6 +8,8 @@ package com.google.appinventor.client;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.appinventor.client.output.OdeLog;
+
 import static com.google.appinventor.client.Ode.MESSAGES;
 
 public class TranslationComponentProperty {
@@ -20,6 +22,10 @@ public class TranslationComponentProperty {
   }
 
   public static String getName(String key) {
+    if (!myMap.containsKey(key)) {
+      OdeLog.log("Param does not contain key " + key);
+      return key;
+    }
     return myMap.get(key);
   }
 
