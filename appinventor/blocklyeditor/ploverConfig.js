@@ -148,6 +148,7 @@
     './src/blocks/lexical-variables.js',
     './src/blocks/colors.js',
     './src/blocks/components.js',
+    './src/blocks/dictionaries.js',
 
     //generator files
     "./src/generators/yail.js",
@@ -160,6 +161,7 @@
     "./src/generators/yail/colors.js",
     "./src/generators/yail/variables.js",
     "./src/generators/yail/procedures.js",
+    "./src/generators/yail/dictionaries.js",
 
     // Repl
     "./src/replmgr.js"

@@ -133,4 +133,6 @@
 
   <set-property-fallback name="locale" value="en"/>
 
+  <collapse-all-properties/>
+
 </module>

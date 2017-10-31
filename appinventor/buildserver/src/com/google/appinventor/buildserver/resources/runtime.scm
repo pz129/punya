@@ -806,6 +806,7 @@
 (define-alias String <java.lang.String>)
 (define-alias Pattern <java.util.regex.Pattern>)
 (define-alias YailList <com.google.appinventor.components.runtime.util.YailList>)
+(define-alias YailDictionary <com.google.appinventor.components.runtime.util.YailDictionary>)
 (define-alias YailNumberToString <com.google.appinventor.components.runtime.util.YailNumberToString>)
 (define-alias YailRuntimeError <com.google.appinventor.components.runtime.errors.YailRuntimeError>)
 
@@ -2182,6 +2183,46 @@ list, use the make-yail-list constructor with no arguments.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; End of List implementation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#|
+Dictionary implementation.
+
+- make dictionary           (make-yail-dictionary . pairs)
+- make pair                 (make-yail-pair key value)
+- dictionary lookup         (yail-dictionary-lookup key yail-dictionary default)
+
+|#
+
+(define (make-yail-dictionary . pairs)
+  (YailDictionary:makeDictionary pairs)
+)
+
+(define (make-yail-pair key value)
+  (make-yail-list key value)
+)
+
+(define (yail-dictionary-lookup key yail-dictionary default)
+  (android-log
+   (format #f "Dictionary lookup key is  ~A and table is ~A" key yail-dictionary))
+  (let ((result 
+    (cond ((instance? yail-dictionary YailList)
+           (yail-alist-lookup key yail-dictionary default))
+          ((instance? yail-dictionary YailDictionary)
+            (*:get (as YailDictionary yail-dictionary) key))
+          (#t default))))
+    (if (null? result)
+      default
+      result))
+)
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; End of Dictionary implementation
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;Text implementation
