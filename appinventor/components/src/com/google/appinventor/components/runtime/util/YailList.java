@@ -14,6 +14,7 @@ import gnu.lists.Pair;
 import org.json.JSONException;
 
 import java.util.Collection;
+import java.util.Set;
 import java.util.List;
 
 import android.util.Log;
@@ -77,6 +78,14 @@ public class YailList extends Pair {
    */
   public static YailList makeList(Collection vals) {
     LList newCdr = Pair.makeList(vals.toArray(), 0);
+    return new YailList(newCdr);
+  }
+
+  /**
+   * Create a YailList from a Set.
+   */
+  public static YailList makeList(Set<Object> vals) {
+    LList newCdr = Pair.makeList(vals.toArray(new Object[vals.size()]), 0);
     return new YailList(newCdr);
   }
 

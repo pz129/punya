@@ -891,6 +891,26 @@ Blockly.Msg.en.switch_language_to_english = {
     Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_LOOKUP_TOOLTIP = 'Returns the value in the dictionary associated with the key';
     Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_LOOKUP_TITLE = 'look up in a dictionary';
 
+    Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_TITLE = 'get keys';
+    Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_INPUT = 'dict';
+    Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_TOOLTIP = 'Returns a list of all of the keys in the dictionary';
+
+    Blockly.Msg.LANG_DICTIONARIES_GET_VALUES_TITLE = 'get values';
+    Blockly.Msg.LANG_DICTIONARIES_GET_VALUES_INPUT = 'dict';
+    Blockly.Msg.LANG_DICTIONARIES_GET_VALUES_TOOLTIP = 'Returns a list of all of the values in the dictionary';
+
+    Blockly.Msg.LANG_DICTIONARIES_IS_KEY_IN_INPUT = 'is key in dict? key %1 dict %2';
+    Blockly.Msg.LANG_DICTIONARIES_IS_KEY_IN_TOOLTIP = 'Check if a key is in a dictionary';
+    Blockly.Msg.LANG_DICTIONARIES_IS_KEY_IN_TITLE = 'is key in dict?';
+
+    Blockly.Msg.LANG_DICTIONARIES_LENGTH_TITLE = 'length of dict';
+    Blockly.Msg.LANG_DICTIONARIES_LENGTH_INPUT = 'dict';
+    Blockly.Msg.LANG_DICTIONARIES_LENGTH_TOOLTIP = 'Returns the number of key-value pairs in the dictionary';
+
+    Blockly.Msg.LANG_DICTIONARIES_COPY_TITLE = 'copy dict';
+    Blockly.Msg.LANG_DICTIONARIES_COPY_INPUT = 'dict';
+    Blockly.Msg.LANG_DICTIONARIES_COPY_TOOLTIP = 'Returns a shallow copy of the dictionary';
+
     /*Blockly.Msg.LANG_LISTS_INDEX_OF_HELPURL = 'http://publib.boulder.ibm.com/infocenter/lnxpcomp/v8v101/index.jsp?topic=%2Fcom.ibm.xlcpp8l.doc%2Flanguage%2Fref%2Farsubex.htm';
      Blockly.Msg.LANG_LISTS_INDEX_OF_TITLE_FIND = 'find';
      Blockly.Msg.LANG_LISTS_INDEX_OF_INPUT_OCCURRENCE = 'occurrence of item';

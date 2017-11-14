@@ -7,6 +7,7 @@
 package com.google.appinventor.components.runtime.util;
 
 import com.google.appinventor.components.runtime.errors.YailRuntimeError;
+import com.google.appinventor.components.runtime.Form;
 
 import org.json.JSONException;
 
@@ -59,15 +60,34 @@ public class YailDictionary extends HashMap {
     return new YailDictionary(prevMap);
   }
 
-  public static YailDictionary makeDictionary(YailList[] pairs) {
+  public static YailDictionary makeDictionary(List<YailList> pairs) {
     HashMap<Object, Object> map = new HashMap();
 
-    for (int i = 0; i < pairs.length; i++) {
-      YailList currentYailList = pairs[i];
+    for (int i = 0; i < pairs.size(); i++) {
+      YailList currentYailList = pairs.get(i);
       map.put(currentYailList.getObject(0), currentYailList.getObject(1));
     }
 
     return new YailDictionary(map);
   }
   
+  @Override
+  public String toString() {    
+    try {
+      Form currentForm = Form.getActiveForm();
+
+      String jsonRep = JsonUtil.getJsonRepresentation(this);
+
+      if (currentForm.ShowListsAsJson()) {
+        currentForm.ShowListsAsJson(false);
+        return jsonRep;
+      } else {
+        currentForm.ShowListsAsJson(true);
+        Object jsonObject = JsonUtil.getObjectFromJson(jsonRep);
+        return jsonObject.toString();
+      }
+    } catch (JSONException e) {
+      throw new YailRuntimeError("YailDictionary failed to convert to string.", "toString Error.");
+    }
+  }
 }

@@ -1146,6 +1146,9 @@
      ((equal? type 'list) (coerce-to-yail-list arg))
      ((equal? type 'InstantInTime) (coerce-to-instant arg))
      ((equal? type 'component) (coerce-to-component arg))
+     ((equal? type 'pair) (coerce-to-pair arg))
+     ((equal? type 'key) (coerce-to-key arg))
+     ((equal? type 'dictionary) (coerce-to-dictionary arg))
      ((equal? type 'any) arg)
      (else (coerce-to-component-of-type arg type)))))
 
@@ -1195,6 +1198,12 @@
    ((number? arg) arg)
    ((string? arg)
     (or (padded-string->number arg) *non-coercible-value*))
+   (else *non-coercible-value*)))
+
+(define (coerce-to-key arg)
+  (cond
+   ((number? arg) (coerce-to-number arg))
+   ((string? arg) (coerce-to-string arg))
    (else *non-coercible-value*)))
 
 (define-syntax use-json-format
@@ -1299,6 +1308,13 @@
    ((yail-list? arg) arg)
    (else *non-coercible-value*)))
 
+(define (coerce-to-pair arg)
+  (coerce-to-yail-list arg))
+
+(define (coerce-to-dictionary arg)
+  (cond
+    ((yail-dictionary? arg) arg)
+    (else *non-coercible-value*)))
 
 (define (coerce-to-boolean arg)
   (cond
@@ -2190,8 +2206,15 @@ list, use the make-yail-list constructor with no arguments.
 Dictionary implementation.
 
 - make dictionary           (make-yail-dictionary . pairs)
-- make pair                 (make-yail-pair key value)
+- make pair                 (make-dictionary-pair key value)
 - dictionary lookup         (yail-dictionary-lookup key yail-dictionary default)
+- get keys                  (yail-dictionary-get-keys yail-dictionary)
+- get values                (yail-dictionary-get-values yail-dictionary)
+- is key in dict            (yail-dictionary-is-key-in key yail-dictionary)
+- get length of dict        (yail-dictionary-length yail-dictionary)
+- get copy of dict          (yail-dictionary-copy yail-dictionary)
+
+- is YailDictionary?        (yail-dictionary? x)
 
 |#
 
@@ -2199,7 +2222,7 @@ Dictionary implementation.
   (YailDictionary:makeDictionary pairs)
 )
 
-(define (make-yail-pair key value)
+(define (make-dictionary-pair key value)
   (make-yail-list key value)
 )
 
@@ -2217,6 +2240,28 @@ Dictionary implementation.
       result))
 )
 
+(define (yail-dictionary-get-keys yail-dictionary)
+  (make-yail-list (*:keySet (as YailDictionary yail-dictionary)))
+)
+
+(define (yail-dictionary-get-values yail-dictionary)
+  (make-yail-list (*:values (as YailDictionary yail-dictionary)))
+)
+
+(define (yail-dictionary-is-key-in key yail-dictionary)
+  (*:containsKey (as YailDictionary yail-dictionary) key)
+)
+
+(define (yail-dictionary-length yail-dictionary)
+  (*:size (as YailDictionary yail-dictionary))
+)
+
+(define (yail-dictionary-copy yail-dictionary)
+  (*:clone (as YailDictionary yail-dictionary))
+)
+
+(define (yail-dictionary? x)
+  (instance? x YailDictionary))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

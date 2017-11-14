@@ -52,17 +52,17 @@ Blockly.Yail['dictionaries_create_with'] = function() {
 Blockly.Yail['pair'] = function() {
   var argument0 = Blockly.Yail.valueToCode(this, 'KEY', Blockly.Yail.ORDER_NONE) || null;
   var argument1 = Blockly.Yail.valueToCode(this, 'VALUE', Blockly.Yail.ORDER_NONE) || null;
-  var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + "make-yail-pair" + Blockly.Yail.YAIL_SPACER;
+  var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + "make-dictionary-pair" + Blockly.Yail.YAIL_SPACER;
   code = code + Blockly.Yail.YAIL_OPEN_COMBINATION + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER;
   code = code + argument0 + Blockly.Yail.YAIL_SPACER + argument1 + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_CLOSE_COMBINATION;
   code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_QUOTE + Blockly.Yail.YAIL_OPEN_COMBINATION;
   code = code + "key any" + Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
   code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_DOUBLE_QUOTE + "make a pair" + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
   return [ code, Blockly.Yail.ORDER_ATOMIC ];
-}
+};
 
 Blockly.Yail['dictionary_lookup'] = function() {
-	// Lookup in pairs in list of lists (key, value).
+	// Lookup in pairs in list of lists (key, value).T
 	var argument0 = Blockly.Yail.valueToCode(this, 'KEY', Blockly.Yail.ORDER_NONE) || Blockly.Yail.YAIL_FALSE;
 	var argument1 = Blockly.Yail.valueToCode(this, 'DICT', Blockly.Yail.ORDER_NONE) || Blockly.Yail.emptyDictCode;    //TODO: define empty dict code
 	var argument2 = Blockly.Yail.valueToCode(this, 'NOTFOUND', Blockly.Yail.ORDER_NONE) || Blockly.Yail.YAIL_NULL;
@@ -73,4 +73,60 @@ Blockly.Yail['dictionary_lookup'] = function() {
 	code = code + "any any any" + Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
 	code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_DOUBLE_QUOTE + "dictionary lookup" + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
 	return [ code, Blockly.Yail.ORDER_ATOMIC ];
+};
+
+Blockly.Yail['dictionaries_get_keys'] = function() {
+  var argument = Blockly.Yail.valueToCode(this, 'DICT', Blockly.Yail.ORDER_NONE) || Blockly.Yail.emptyDictCode;
+  var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + "yail-dictionary-get-keys" + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_OPEN_COMBINATION + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER;
+  code = code + argument + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_QUOTE + Blockly.Yail.YAIL_OPEN_COMBINATION;
+  code = code + "dictionary" + Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_DOUBLE_QUOTE + "get a dictionary's keys" + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  return [ code, Blockly.Yail.ORDER_ATOMIC ];
+};
+
+Blockly.Yail['dictionaries_get_values'] = function() {
+  var argument = Blockly.Yail.valueToCode(this, 'DICT', Blockly.Yail.ORDER_NONE) || Blockly.Yail.emptyDictCode;
+  var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + "yail-dictionary-get-values" + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_OPEN_COMBINATION + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER;
+  code = code + argument + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_QUOTE + Blockly.Yail.YAIL_OPEN_COMBINATION;
+  code = code + "dictionary" + Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_DOUBLE_QUOTE + "get a dictionary's values" + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  return [ code, Blockly.Yail.ORDER_ATOMIC ];
+};
+
+Blockly.Yail['dictionaries_is_key_in'] = function() {
+  var argument0 = Blockly.Yail.valueToCode(this, 'KEY', Blockly.Yail.ORDER_NONE) || Blockly.Yail.YAIL_FALSE;
+  var argument1 = Blockly.Yail.valueToCode(this, 'DICT', Blockly.Yail.ORDER_NONE) || Blockly.Yail.emptyDictCode;  
+  var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + "yail-dictionary-is-key-in" + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_OPEN_COMBINATION + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER;
+  code = code + argument0 + Blockly.Yail.YAIL_SPACER + argument1 + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_QUOTE + Blockly.Yail.YAIL_OPEN_COMBINATION;
+  code = code + "key dictionary" + Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_DOUBLE_QUOTE + "is key in dict?" + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  return [ code, Blockly.Yail.ORDER_ATOMIC ];
+};
+
+Blockly.Yail['dictionaries_length'] = function() {
+  var argument = Blockly.Yail.valueToCode(this, 'DICT', Blockly.Yail.ORDER_NONE) || Blockly.Yail.emptyDictCode;
+  var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + "yail-dictionary-length" + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_OPEN_COMBINATION + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER;
+  code = code + argument + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_QUOTE + Blockly.Yail.YAIL_OPEN_COMBINATION;
+  code = code + "dictionary" + Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_DOUBLE_QUOTE + "get a dictionary's length" + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  return [ code, Blockly.Yail.ORDER_ATOMIC ];
+};
+
+Blockly.Yail['dictionaries_copy'] = function() {
+  var argument = Blockly.Yail.valueToCode(this, 'DICT', Blockly.Yail.ORDER_NONE) || Blockly.Yail.emptyDictCode;
+  var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + "yail-dictionary-copy" + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_OPEN_COMBINATION + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER;
+  code = code + argument + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_QUOTE + Blockly.Yail.YAIL_OPEN_COMBINATION;
+  code = code + "dictionary" + Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_DOUBLE_QUOTE + "get a shallow copy of a dict" + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  return [ code, Blockly.Yail.ORDER_ATOMIC ];
 };

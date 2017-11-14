@@ -14,6 +14,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -179,6 +181,10 @@ public class JsonUtil {
     }
     if (value instanceof List) {
       value = ((List)value).toArray();
+    }
+    if (value instanceof YailDictionary) {
+      Gson gson = new Gson(); 
+      return gson.toJson(value);
     }
     if (value.getClass().isArray()) {
       StringBuilder sb = new StringBuilder();
