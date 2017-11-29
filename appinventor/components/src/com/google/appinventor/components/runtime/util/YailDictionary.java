@@ -14,6 +14,8 @@ import org.json.JSONException;
 import java.util.Collection;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Iterator;
 
 import android.util.Log;
 
@@ -70,6 +72,42 @@ public class YailDictionary extends HashMap {
 
     return new YailDictionary(map);
   }
+
+  public void setPairs(List<YailList> pairs) {
+    for (int i = 0; i < pairs.size(); i++) {
+      YailList currentYailList = pairs.get(i);
+      this.put(currentYailList.getObject(0), currentYailList.getObject(1));
+    }
+  }
+
+  public void deletePairs(List<Object> keys) {
+    for (int i = 0; i < keys.size(); i++) {
+      Object currentKey = keys.get(i);
+      this.remove(currentKey);
+    }
+  }
+
+  public Object recursiveGet(List<Object> keys) {
+    Map currentMap = this;
+    Object output = null;
+
+    Iterator itr = keys.iterator();
+
+    while (itr.hasNext()) {
+        Object currentKey = itr.next();
+        output = currentMap.get(currentKey);
+
+        if (output instanceof Map) {
+          currentMap = (Map) output;
+        } else {
+          if (itr.hasNext()) {
+            return null;
+          }
+        }
+    }
+
+    return output;
+  }
   
   @Override
   public String toString() {    
@@ -79,10 +117,10 @@ public class YailDictionary extends HashMap {
       String jsonRep = JsonUtil.getJsonRepresentation(this);
 
       if (currentForm.ShowListsAsJson()) {
-        currentForm.ShowListsAsJson(false);
+        //currentForm.ShowListsAsJson(false);
         return jsonRep;
       } else {
-        currentForm.ShowListsAsJson(true);
+        //currentForm.ShowListsAsJson(true);
         Object jsonObject = JsonUtil.getObjectFromJson(jsonRep);
         return jsonObject.toString();
       }

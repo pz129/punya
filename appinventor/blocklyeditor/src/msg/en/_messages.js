@@ -886,10 +886,34 @@ Blockly.Msg.en.switch_language_to_english = {
     Blockly.Msg.LANG_DICTIONARIES_PAIRS_INPUT = 'pair key %1 value %2';
     Blockly.Msg.LANG_DICTIONARIES_PAIRS_TOOLTIP = 'Creates a pair with the key and value provided';
     Blockly.Msg.LANG_DICTIONARIES_MAKE_PAIR_TITLE = 'make a pair';
+
+    Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_TITLE = 'set dictionary pairs';
+    Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_INPUT_DICT = ' dict';
+    Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_INPUT_ITEM = 'pair';
+    Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_TOOLTIP = 'Sets pairs in a dictionary';
     
+    Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_CONTAINER_TITLE_ADD = 'dictionary';
+    Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_CONTAINER_TOOLTIP = 'Add, remove, or reorder sections to reconfigure this dictionary block.';
+    Blockly.Msg.LANG_DICTIONARIES_SET_PAIR_TITLE = 'pair';
+    Blockly.Msg.LANG_DICTIONARIES_SET_PAIR_TOOLTIP = 'Set a pair in a dictionary.';
+
+    Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_TITLE = 'delete dictionary pairs';
+    Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_INPUT_DICT = ' dict';
+    Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_INPUT_ITEM = 'key';
+    Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_TOOLTIP = 'Deletes pairs from a dictionary given their keys';
+    
+    Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_CONTAINER_TITLE_ADD = 'dictionary';
+    Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_CONTAINER_TOOLTIP = 'Add, remove, or reorder sections to reconfigure this dictionary block.';
+    Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIR_TITLE = 'key';
+    Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIR_TOOLTIP = 'Add a key to delete its pair.';
+
     Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_LOOKUP_INPUT = 'look up in dictionary  key %1 dict %2 notFound %3';
     Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_LOOKUP_TOOLTIP = 'Returns the value in the dictionary associated with the key';
     Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_LOOKUP_TITLE = 'look up in a dictionary';
+
+    Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_INPUT = 'recursive look up in dictionary  keys %1 dict %2 notFound %3';
+    Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_TOOLTIP = 'Returns the value in the nested dictionary';
+    Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_TITLE = 'recursive look up in a dictionary';
 
     Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_TITLE = 'get keys';
     Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_INPUT = 'dict';

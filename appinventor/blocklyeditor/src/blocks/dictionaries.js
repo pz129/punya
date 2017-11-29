@@ -53,6 +53,7 @@ Blockly.Blocks['dictionaries_create_with'] = {
   },
   updateContainerBlock: function(containerBlock) {
     containerBlock.setFieldValue(Blockly.Msg.LANG_DICTIONARIES_CREATE_WITH_CONTAINER_TITLE_ADD,"CONTAINER_TEXT");
+    containerBlock.setTooltip(Blockly.Msg.LANG_DICTIONARIES_CREATE_WITH_CONTAINER_TOOLTIP);
   },
   // create type blocks for both make a dictionary (two pairs) and create empty dictionary
   typeblock: [
@@ -92,63 +93,115 @@ Blockly.Blocks['pair'] = {
   typeblock: [{ translatedName: Blockly.Msg.LANG_DICTIONARIES_MAKE_PAIR_TITLE }]
 };
 
-///////////////////////////////
+Blockly.Blocks['dictionaries_set_pairs'] = {
+  category: 'Dictionaries',
+  //helpUrl: Blockly.Msg.LANG_LISTS_ADD_ITEMS_HELPURL,
+  init: function() {
+    this.setColour(Blockly.DICTIONARY_CATEGORY_HUE);
+    this.appendValueInput('DICT')
+      .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("dictionary",Blockly.Blocks.Utilities.INPUT))
+      .appendField(Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_TITLE)
+      .appendField(Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_INPUT_DICT);
+    this.appendValueInput('PAIR0')
+      .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("pair",Blockly.Blocks.Utilities.INPUT))
+      .appendField(Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_INPUT_ITEM)
+      .setAlign(Blockly.ALIGN_RIGHT);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip(Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_TOOLTIP);
+    this.setMutator(new Blockly.Mutator(['dictionaries_set_pairs_pair']));
+    this.itemCount_ = 1;
+    this.emptyInputName = null;
+    this.repeatingInputName = 'PAIR';
+  },
+  mutationToDom: Blockly.mutationToDom,
+  domToMutation: Blockly.domToMutation,
+  decompose: function(workspace){
+    return Blockly.decompose(workspace,'dictionaries_set_pairs_pair',this);
+  },
+  compose: Blockly.compose,
+  saveConnections: Blockly.saveConnections,
+  addEmptyInput: function(){},
+  addInput: function(inputNum){
+    var input = this.appendValueInput(this.repeatingInputName + inputNum)
+      .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("pair",Blockly.Blocks.Utilities.INPUT))
+      .appendField('pair').setAlign(Blockly.ALIGN_RIGHT);
+    return input;
+  },
+  updateContainerBlock: function(containerBlock) {
+    containerBlock.setFieldValue(Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_CONTAINER_TITLE_ADD,"CONTAINER_TEXT");
+    containerBlock.setTooltip(Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_CONTAINER_TOOLTIP);
+  },
+  typeblock: [{ translatedName: Blockly.Msg.LANG_DICTIONARIES_SET_PAIRS_TITLE }]
+};
 
-// Blockly.Blocks['dictionaries_add_dictionaries'] = {
-//   // Create a list with any number of elements of any type.
-//   category: 'Lists',
-//   helpUrl: Blockly.Msg.LANG_LISTS_ADD_ITEMS_HELPURL,
-//   init: function() {
-//     this.setColour(Blockly.LIST_CATEGORY_HUE);
-//     this.appendValueInput('DICT')
-//       .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("list",Blockly.Blocks.Utilities.INPUT))
-//       .appendField(Blockly.Msg.LANG_LISTS_ADD_ITEMS_TITLE_ADD)
-//       .appendField(Blockly.Msg.LANG_LISTS_ADD_ITEMS_INPUT_LIST);
-//     this.appendValueInput('ITEM0')
-//       .appendField(Blockly.Msg.LANG_LISTS_ADD_ITEMS_INPUT_ITEM)
-//       .setAlign(Blockly.ALIGN_RIGHT);
-//     this.setPreviousStatement(true);
-//     this.setNextStatement(true);
-//     this.setTooltip(Blockly.Msg.LANG_LISTS_ADD_ITEMS_TOOLTIP);
-//     this.setMutator(new Blockly.Mutator(['lists_add_items_item']));
-//     this.itemCount_ = 1;
-//     this.emptyInputName = null;
-//     this.repeatingInputName = 'ITEM';
-//   },
-//   mutationToDom: Blockly.mutationToDom,
-//   domToMutation: Blockly.domToMutation,
-//   decompose: function(workspace){
-//     return Blockly.decompose(workspace,'lists_add_items_item',this);
-//   },
-//   compose: Blockly.compose,
-//   saveConnections: Blockly.saveConnections,
-//   addEmptyInput: function(){},
-//   addInput: function(inputNum){
-//     var input = this.appendValueInput(this.repeatingInputName + inputNum);
-//     input.appendField('item').setAlign(Blockly.ALIGN_RIGHT);
-//     return input;
-//   },
-//   updateContainerBlock: function(containerBlock) {
-//     containerBlock.setFieldValue(Blockly.Msg.LANG_LISTS_ADD_ITEMS_CONTAINER_TITLE_ADD,"CONTAINER_TEXT");
-//     containerBlock.setTooltip(Blockly.Msg.LANG_LISTS_ADD_ITEMS_CONTAINER_TOOLTIP);
-//   },
-//   typeblock: [{ translatedName: Blockly.Msg.LANG_LISTS_ADD_ITEMS_TITLE_ADD }]
-// };
+Blockly.Blocks['dictionaries_set_pairs_pair'] = {
+  // Add pairs.
+  init: function() {
+    this.setColour(Blockly.DICTIONARY_CATEGORY_HUE);
+    this.appendDummyInput()
+        .appendField(Blockly.Msg.LANG_DICTIONARIES_SET_PAIR_TITLE);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip(Blockly.Msg.LANG_DICTIONARIES_SET_PAIR_TOOLTIP);
+    this.contextMenu = false;
+  }
+};
 
-// Blockly.Blocks['lists_add_items_item'] = {
-//   // Add items.
-//   init: function() {
-//     this.setColour(Blockly.LIST_CATEGORY_HUE);
-//     this.appendDummyInput()
-//         .appendField(Blockly.Msg.LANG_LISTS_ADD_ITEM_TITLE);
-//     this.setPreviousStatement(true);
-//     this.setNextStatement(true);
-//     this.setTooltip(Blockly.Msg.LANG_LISTS_ADD_ITEM_TOOLTIP);
-//     this.contextMenu = false;
-//   }
-// };
+Blockly.Blocks['dictionaries_delete_pairs'] = {
+  category: 'Dictionaries',
+  //helpUrl: Blockly.Msg.LANG_LISTS_ADD_ITEMS_HELPURL,
+  init: function() {
+    this.setColour(Blockly.DICTIONARY_CATEGORY_HUE);
+    this.appendValueInput('DICT')
+      .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("dictionary",Blockly.Blocks.Utilities.INPUT))
+      .appendField(Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_TITLE)
+      .appendField(Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_INPUT_DICT);
+    this.appendValueInput('KEY0')
+      .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("key",Blockly.Blocks.Utilities.INPUT))
+      .appendField(Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_INPUT_ITEM)
+      .setAlign(Blockly.ALIGN_RIGHT);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip(Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_TOOLTIP);
+    this.setMutator(new Blockly.Mutator(['dictionaries_delete_pairs_key']));
+    this.itemCount_ = 1;
+    this.emptyInputName = null;
+    this.repeatingInputName = 'KEY';
+  },
+  mutationToDom: Blockly.mutationToDom,
+  domToMutation: Blockly.domToMutation,
+  decompose: function(workspace){
+    return Blockly.decompose(workspace,'dictionaries_delete_pairs_key',this);
+  },
+  compose: Blockly.compose,
+  saveConnections: Blockly.saveConnections,
+  addEmptyInput: function(){},
+  addInput: function(inputNum){
+    var input = this.appendValueInput(this.repeatingInputName + inputNum)
+      .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("key",Blockly.Blocks.Utilities.INPUT))
+      .appendField('key').setAlign(Blockly.ALIGN_RIGHT);
+    return input;
+  },
+  updateContainerBlock: function(containerBlock) {
+    containerBlock.setFieldValue(Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_CONTAINER_TITLE_ADD,"CONTAINER_TEXT");
+    containerBlock.setTooltip(Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_CONTAINER_TOOLTIP);
+  },
+  typeblock: [{ translatedName: Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIRS_TITLE }]
+};
 
-//////////////////////////////
+Blockly.Blocks['dictionaries_delete_pairs_key'] = {
+  // delete keys
+  init: function() {
+    this.setColour(Blockly.DICTIONARY_CATEGORY_HUE);
+    this.appendDummyInput()
+        .appendField(Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIR_TITLE);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip(Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIR_TOOLTIP);
+    this.contextMenu = false;
+  }
+};
 
 Blockly.Blocks['dictionary_lookup'] = {
   // Look up in a dictionary.
@@ -169,6 +222,27 @@ Blockly.Blocks['dictionary_lookup'] = {
     this.setInputsInline(false);
   },
   typeblock: [{ translatedName: Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_LOOKUP_TITLE }]
+};
+
+Blockly.Blocks['dictionary_recursive_lookup'] = {
+  // Look up in a dictionary.
+  category: 'Dictionaries',
+  //helpUrl : Blockly.Msg.LANG_LISTS_LOOKUP_IN_PAIRS_HELPURL,
+  init: function() {
+    this.setColour(Blockly.DICTIONARY_CATEGORY_HUE);  //TODO: set actual color
+    this.setOutput(true, Blockly.Blocks.Utilities.YailTypeToBlocklyType("any",Blockly.Blocks.Utilities.OUTPUT));
+    var checkTypeDict = Blockly.Blocks.Utilities.YailTypeToBlocklyType("dictionary",Blockly.Blocks.Utilities.INPUT);
+    var checkTypeAny = Blockly.Blocks.Utilities.YailTypeToBlocklyType("any",Blockly.Blocks.Utilities.INPUT);
+    var checkTypeList = Blockly.Blocks.Utilities.YailTypeToBlocklyType("list",Blockly.Blocks.Utilities.INPUT);
+    this.interpolateMsg(Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_INPUT,
+            ['KEYS', checkTypeList, Blockly.ALIGN_RIGHT],
+            ['DICT', checkTypeDict, Blockly.ALIGN_RIGHT],
+            ['NOTFOUND', checkTypeAny, Blockly.ALIGN_RIGHT],
+            Blockly.ALIGN_RIGHT);
+    this.setTooltip(Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_TOOLTIP);
+    this.setInputsInline(false);
+  },
+  typeblock: [{ translatedName: Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_TITLE }]
 };
 
 Blockly.Blocks['dictionaries_get_keys'] = {
