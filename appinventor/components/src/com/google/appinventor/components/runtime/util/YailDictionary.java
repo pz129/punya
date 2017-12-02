@@ -73,18 +73,8 @@ public class YailDictionary extends HashMap {
     return new YailDictionary(map);
   }
 
-  public void setPairs(List<YailList> pairs) {
-    for (int i = 0; i < pairs.size(); i++) {
-      YailList currentYailList = pairs.get(i);
-      this.put(currentYailList.getObject(0), currentYailList.getObject(1));
-    }
-  }
-
-  public void deletePairs(List<Object> keys) {
-    for (int i = 0; i < keys.size(); i++) {
-      Object currentKey = keys.get(i);
-      this.remove(currentKey);
-    }
+  public void setPair(YailList pair) {
+    this.put(pair.getObject(0), pair.getObject(1));
   }
 
   public Object recursiveGet(List<Object> keys) {

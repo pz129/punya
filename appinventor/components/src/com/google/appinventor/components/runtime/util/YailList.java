@@ -16,6 +16,7 @@ import org.json.JSONException;
 import java.util.Collection;
 import java.util.Set;
 import java.util.List;
+import java.util.ArrayList;
 
 import android.util.Log;
 
@@ -77,15 +78,20 @@ public class YailList extends Pair {
    * Create a YailList from a Collection.
    */
   public static YailList makeList(Collection vals) {
-    LList newCdr = Pair.makeList(vals.toArray(), 0);
+    List valsList = new ArrayList(vals);
+
+    LList newCdr = Pair.makeList(valsList);
     return new YailList(newCdr);
   }
 
   /**
    * Create a YailList from a Set.
    */
-  public static YailList makeList(Set<Object> vals) {
-    LList newCdr = Pair.makeList(vals.toArray(new Object[vals.size()]), 0);
+  public static YailList makeList(Set vals) {
+    // LList newCdr = Pair.makeList(vals.toArray(new Object[vals.size()]), 0);
+    List valsList = new ArrayList(vals);
+
+    LList newCdr = Pair.makeList(valsList);
     return new YailList(newCdr);
   }
 

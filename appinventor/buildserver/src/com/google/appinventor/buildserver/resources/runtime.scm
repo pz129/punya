@@ -2207,8 +2207,8 @@ Dictionary implementation.
 
 - make dictionary           (make-yail-dictionary . pairs)
 - make pair                 (make-dictionary-pair key value)
-- set pairs                 (yail-dictionary-set-pairs yail-dictionary . pairs)
-- delete pairs              (yail-dictionary-delete-pairs yail-dictionary . keys)
+- set pair                  (yail-dictionary-set-pair yail-dictionary pair)
+- delete pair               (yail-dictionary-delete-pair yail-dictionary key)
 - dictionary lookup         (yail-dictionary-lookup key yail-dictionary default)
 - dict recursive lookup     (yail-dictionary-recursive-lookup keys yail-dictionary default)
 - get keys                  (yail-dictionary-get-keys yail-dictionary)
@@ -2229,12 +2229,12 @@ Dictionary implementation.
   (make-yail-list key value)
 )
 
-(define (yail-dictionary-set-pairs yail-dictionary . pairs)
-  (*:setPairs (as YailDictionary yail-dictionary) pairs)
+(define (yail-dictionary-set-pair yail-dictionary pair)
+  (*:setPair (as YailDictionary yail-dictionary) pair)
 )
 
-(define (yail-dictionary-delete-pairs yail-dictionary . keys)
-  (*:deletePairs (as YailDictionary yail-dictionary) keys)
+(define (yail-dictionary-delete-pair yail-dictionary key)
+  (*:remove (as YailDictionary yail-dictionary) key)
 )
 
 (define (yail-dictionary-lookup key yail-dictionary default)
@@ -2261,10 +2261,12 @@ Dictionary implementation.
 )
 
 (define (yail-dictionary-get-keys yail-dictionary)
+  ;(yail-list-get-item (make-yail-list (*:keySet (as YailDictionary yail-dictionary))) 1)
   (make-yail-list (*:keySet (as YailDictionary yail-dictionary)))
 )
 
 (define (yail-dictionary-get-values yail-dictionary)
+  ;(yail-list-get-item (make-yail-list (*:values (as YailDictionary yail-dictionary))) 1)
   (make-yail-list (*:values (as YailDictionary yail-dictionary)))
 )
 
