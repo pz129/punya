@@ -2187,14 +2187,9 @@ list, use the make-yail-list constructor with no arguments.
            (cadr (yail-list-contents (car pairs-to-check))))
           (else (loop (cdr pairs-to-check))))))
 
-
-
 (define (pair-ok? candidate-pair)
   (and (yail-list? candidate-pair)
        (= (length (yail-list-contents candidate-pair)) 2)))
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; End of List implementation
@@ -2207,8 +2202,8 @@ Dictionary implementation.
 
 - make dictionary           (make-yail-dictionary . pairs)
 - make pair                 (make-dictionary-pair key value)
-- set pairs                 (yail-dictionary-set-pairs yail-dictionary . pairs)
-- delete pairs              (yail-dictionary-delete-pairs yail-dictionary . keys)
+- set pair                  (yail-dictionary-set-pair yail-dictionary pair)
+- delete pair               (yail-dictionary-delete-pair yail-dictionary key)
 - dictionary lookup         (yail-dictionary-lookup key yail-dictionary default)
 - dict recursive lookup     (yail-dictionary-recursive-lookup keys yail-dictionary default)
 - get keys                  (yail-dictionary-get-keys yail-dictionary)
@@ -2216,6 +2211,7 @@ Dictionary implementation.
 - is key in dict            (yail-dictionary-is-key-in key yail-dictionary)
 - get length of dict        (yail-dictionary-length yail-dictionary)
 - get copy of dict          (yail-dictionary-copy yail-dictionary)
+- turn alist to dict        (yail-dictionary-alist-to-dict alist)
 
 - is YailDictionary?        (yail-dictionary? x)
 
@@ -2229,12 +2225,12 @@ Dictionary implementation.
   (make-yail-list key value)
 )
 
-(define (yail-dictionary-set-pairs yail-dictionary . pairs)
-  (*:setPairs (as YailDictionary yail-dictionary) pairs)
+(define (yail-dictionary-set-pair yail-dictionary pair)
+  (*:setPair (as YailDictionary yail-dictionary) pair)
 )
 
-(define (yail-dictionary-delete-pairs yail-dictionary . keys)
-  (*:deletePairs (as YailDictionary yail-dictionary) keys)
+(define (yail-dictionary-delete-pair yail-dictionary key)
+  (*:remove (as YailDictionary yail-dictionary) key)
 )
 
 (define (yail-dictionary-lookup key yail-dictionary default)
@@ -2261,10 +2257,12 @@ Dictionary implementation.
 )
 
 (define (yail-dictionary-get-keys yail-dictionary)
+  ;(yail-list-get-item (make-yail-list (*:keySet (as YailDictionary yail-dictionary))) 1)
   (make-yail-list (*:keySet (as YailDictionary yail-dictionary)))
 )
 
 (define (yail-dictionary-get-values yail-dictionary)
+  ;(yail-list-get-item (make-yail-list (*:values (as YailDictionary yail-dictionary))) 1)
   (make-yail-list (*:values (as YailDictionary yail-dictionary)))
 )
 
@@ -2275,6 +2273,19 @@ Dictionary implementation.
 (define (yail-dictionary-length yail-dictionary)
   (*:size (as YailDictionary yail-dictionary))
 )
+
+(define (yail-dictionary-alist-to-dict alist)
+  (android-log
+   (format #f "List alist table is ~A" alist))
+  (let loop ((pairs-to-check (yail-list-contents alist)))
+    (cond ((null? pairs-to-check) "The list of pairs has a null pair")
+          ((not (pair-ok? (car pairs-to-check)))
+           (signal-runtime-error
+            (format #f "List of pairs to dict: the list ~A is not a well-formed list of pairs"
+                    (get-display-representation alist))
+            "Invalid list of pairs"))
+          (else (loop (cdr pairs-to-check)))))
+  (YailDictionary:alistToDict alist))
 
 (define (yail-dictionary-copy yail-dictionary)
   (*:clone (as YailDictionary yail-dictionary))

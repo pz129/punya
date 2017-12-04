@@ -73,18 +73,39 @@ public class YailDictionary extends HashMap {
     return new YailDictionary(map);
   }
 
-  public void setPairs(List<YailList> pairs) {
-    for (int i = 0; i < pairs.size(); i++) {
-      YailList currentYailList = pairs.get(i);
-      this.put(currentYailList.getObject(0), currentYailList.getObject(1));
+  private static Boolean isAlist(YailList yailList) {
+    for (int i = 0; i < yailList.size(); i++) {
+      Object currentPair = yailList.getObject(i);
+
+      if (!(currentPair instanceof YailList && ((YailList) currentPair).size() == 2)) {
+        return false;
+      }
     }
+
+    return true;
   }
 
-  public void deletePairs(List<Object> keys) {
-    for (int i = 0; i < keys.size(); i++) {
-      Object currentKey = keys.get(i);
-      this.remove(currentKey);
+  public static YailDictionary alistToDict(YailList alist) {
+    HashMap<Object, Object> map = new HashMap();
+
+    for (int i = 0; i < alist.size(); i++) {
+      YailList currentPair = (YailList) alist.getObject(i);
+
+      Object currentKey = currentPair.getObject(0);
+      Object currentValue = currentPair.getObject(1);
+
+      if (currentValue instanceof YailList && isAlist((YailList) currentValue)) {
+        map.put(currentKey, alistToDict((YailList) currentValue));
+      } else {
+        map.put(currentKey, currentValue);
+      }
     }
+
+    return new YailDictionary(map);
+  }
+
+  public void setPair(YailList pair) {
+    this.put(pair.getObject(0), pair.getObject(1));
   }
 
   public Object recursiveGet(List<Object> keys) {
