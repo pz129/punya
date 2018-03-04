@@ -2258,12 +2258,12 @@ Dictionary implementation.
 
 (define (yail-dictionary-get-keys yail-dictionary)
   ;(yail-list-get-item (make-yail-list (*:keySet (as YailDictionary yail-dictionary))) 1)
-  (make-yail-list (*:keySet (as YailDictionary yail-dictionary)))
+  (YailList:makeList (*:keySet (as YailDictionary yail-dictionary)))
 )
 
 (define (yail-dictionary-get-values yail-dictionary)
   ;(yail-list-get-item (make-yail-list (*:values (as YailDictionary yail-dictionary))) 1)
-  (make-yail-list (*:values (as YailDictionary yail-dictionary)))
+  (YailList:makeList (*:values (as YailDictionary yail-dictionary)))
 )
 
 (define (yail-dictionary-is-key-in key yail-dictionary)

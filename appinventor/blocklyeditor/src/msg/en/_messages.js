@@ -927,6 +927,10 @@ Blockly.Msg.en.switch_language_to_english = {
     Blockly.Msg.LANG_DICTIONARIES_COPY_INPUT = 'dict';
     Blockly.Msg.LANG_DICTIONARIES_COPY_TOOLTIP = 'Returns a shallow copy of the dictionary';
 
+    Blockly.Msg.LANG_DICTIONARIES_IS_DICT_TITLE = 'is a dict?';
+    Blockly.Msg.LANG_DICTIONARIES_IS_DICT_INPUT = 'thing';
+    Blockly.Msg.LANG_DICTIONARIES_IS_DICT_TOOLTIP = 'Tests if something is a dictionary';
+
     /*Blockly.Msg.LANG_LISTS_INDEX_OF_HELPURL = 'http://publib.boulder.ibm.com/infocenter/lnxpcomp/v8v101/index.jsp?topic=%2Fcom.ibm.xlcpp8l.doc%2Flanguage%2Fref%2Farsubex.htm';
      Blockly.Msg.LANG_LISTS_INDEX_OF_TITLE_FIND = 'find';
      Blockly.Msg.LANG_LISTS_INDEX_OF_INPUT_OCCURRENCE = 'occurrence of item';

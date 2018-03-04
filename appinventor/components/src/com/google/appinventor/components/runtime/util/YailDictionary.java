@@ -74,8 +74,11 @@ public class YailDictionary extends HashMap {
   }
 
   private static Boolean isAlist(YailList yailList) {
-    for (int i = 0; i < yailList.size(); i++) {
-      Object currentPair = yailList.getObject(i);
+    Iterator itr = yailList.iterator();
+    Object yailListHeader = itr.next();
+
+    while(itr.hasNext()) {
+      Object currentPair = itr.next();
 
       if (!(currentPair instanceof YailList && ((YailList) currentPair).size() == 2)) {
         return false;
@@ -88,8 +91,11 @@ public class YailDictionary extends HashMap {
   public static YailDictionary alistToDict(YailList alist) {
     HashMap<Object, Object> map = new HashMap();
 
-    for (int i = 0; i < alist.size(); i++) {
-      YailList currentPair = (YailList) alist.getObject(i);
+    Iterator itr = alist.iterator();
+    Object yailListHeader = itr.next();
+
+    while(itr.hasNext()) {
+      YailList currentPair = (YailList) itr.next();
 
       Object currentKey = currentPair.getObject(0);
       Object currentValue = currentPair.getObject(1);
