@@ -436,6 +436,8 @@ Blockly.Drawer.defaultBlockXMLStrings = {
     '</block>' +
     '<block type="dictionaries_create_with">' +
       '<mutation items="2"></mutation>' +
+      '<value name="ADD0"><block type="pair"></block></value>' +
+      '<value name="ADD1"><block type="pair"></block></value>' +
     '</block>' +
   '</xml>'},
   dictionary_lookup: {xmlString:

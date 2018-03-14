@@ -114,7 +114,7 @@ public final class BlockSelectorBox extends Box {
     bundledImages.put("Colors", images.colors());
     bundledImages.put("Variables", images.variables());
     bundledImages.put("Procedures", images.procedures());
-    bundledImages.put("Dictionaries", images.lists()); //TODO: create png for this and change from lists
+    bundledImages.put("Dictionaries", images.dictionaries()); //TODO: create png for this and change from lists
   }
 
   /**

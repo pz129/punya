@@ -37,7 +37,61 @@ Blockly.Blocks['dictionaries_create_with'] = {
   decompose: function(workspace){
     return Blockly.decompose(workspace,'dictionaries_create_with_pair',this);
   },
-  compose: Blockly.compose,
+  compose: function(containerBlock) {
+    if(this.valuesToSave != null){
+      for (var name in this.valuesToSave) {
+        this.valuesToSave[name] = this.getFieldValue(name);
+      }
+    }
+    // Disconnect all input blocks and destroy all inputs.
+    if (this.itemCount_ == 0) {
+      if(this.emptyInputName != null) {
+        this.removeInput(this.emptyInputName);
+      }
+    } else {
+      for (var x = this.itemCount_ - 1; x >= 0; x--) {
+        this.removeInput(this.repeatingInputName + x);
+      }
+    }
+    this.itemCount_ = 0;
+    // Rebuild the block's inputs.
+    var itemBlock = containerBlock.getInputTargetBlock('STACK');
+    while (itemBlock) {
+
+      console.log('---------ITEM BLOCK---------');
+      console.log(itemBlock);
+
+      var input = this.addInput(this.itemCount_);
+
+      console.log('---------INPUT---------');
+      console.log(input);
+
+      // Reconnect any child blocks.
+      if (itemBlock.valueConnection_) {
+        input.connection.connect(itemBlock.valueConnection_);
+
+        console.log("--------------VALUE CONNECTION--------------");
+        console.log(itemBlock.valueConnection_);
+      } else {
+        var pairBlock = Blockly.mainWorkspace.newBlock('pair');
+
+        console.log("-------------ELSE-------------");
+        console.log(pairBlock);
+        
+        // input.connection.connect(pairBlock.outputConnection);
+        // console.log("PAIR CONNECTION:");
+        // console.log(Blockly.Blocks['pair']);
+      }
+
+      this.itemCount_++;
+      itemBlock = itemBlock.nextConnection &&
+        itemBlock.nextConnection.targetBlock();
+    }
+    if (this.itemCount_ == 0) {
+
+      this.addEmptyInput();
+    }
+  },
   saveConnections: Blockly.saveConnections,
   addEmptyInput: function(){
     this.appendDummyInput(this.emptyInputName)
@@ -104,6 +158,8 @@ Blockly.Blocks['dictionaries_set_pair'] = {
             ['DICT', checkTypeDict, Blockly.ALIGN_RIGHT],
             ['PAIR', checkTypePair, Blockly.ALIGN_RIGHT],
             Blockly.ALIGN_RIGHT);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
     this.setTooltip(Blockly.Msg.LANG_DICTIONARIES_SET_PAIR_TOOLTIP);
     this.setInputsInline(false);
   },
@@ -121,6 +177,8 @@ Blockly.Blocks['dictionaries_delete_pair'] = {
             ['DICT', checkTypeDict, Blockly.ALIGN_RIGHT],
             ['KEY', checkTypeKey, Blockly.ALIGN_RIGHT],
             Blockly.ALIGN_RIGHT);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
     this.setTooltip(Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIR_TOOLTIP);
     this.setInputsInline(false);
   },
@@ -288,6 +346,25 @@ Blockly.Blocks['dictionaries_copy'] = {
     this.setTooltip(Blockly.Msg.LANG_DICTIONARIES_COPY_TOOLTIP);
   },
   typeblock: [{ translatedName: Blockly.Msg.LANG_DICTIONARIES_COPY_TITLE }]
+};
+
+Blockly.Blocks['dictionaries_combine_dicts'] = {
+   // Checks if a key is in a dictionary
+  category : 'Dictionaries',
+  // helpUrl : Blockly.Msg.LANG_LISTS_IS_IN_HELPURL,
+  init : function() {
+    this.setColour(Blockly.DICTIONARY_CATEGORY_HUE);
+    var checkTypeDict = Blockly.Blocks.Utilities.YailTypeToBlocklyType("dictionary",Blockly.Blocks.Utilities.INPUT);
+    this.interpolateMsg(Blockly.Msg.LANG_DICTIONARIES_COMBINE_DICTS_INPUT,
+            ['DICT1', checkTypeDict, Blockly.ALIGN_RIGHT],
+            ['DICT2', checkTypeDict, Blockly.ALIGN_RIGHT],
+            Blockly.ALIGN_RIGHT);
+    this.setPreviousStatement(true);
+    this.setNextStatement(true);
+    this.setTooltip(Blockly.Msg.LANG_DICTIONARIES_COMBINE_DICTS_TOOLTIP);
+    this.setInputsInline(false);
+  },
+  typeblock: [{ translatedName: Blockly.Msg.LANG_DICTIONARIES_COMBINE_DICTS_TITLE }]
 };
 
 Blockly.Blocks['dictionaries_is_dict'] = {

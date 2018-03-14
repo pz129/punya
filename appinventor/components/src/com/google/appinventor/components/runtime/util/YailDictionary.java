@@ -13,7 +13,7 @@ import org.json.JSONException;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Iterator;
 
@@ -25,7 +25,7 @@ import android.util.Log;
  * by App Inventor components.
  *
  */
-public class YailDictionary extends HashMap {
+public class YailDictionary extends LinkedHashMap {
 
   private static final String LOG_TAG = "YailDictionary";
 
@@ -47,7 +47,7 @@ public class YailDictionary extends HashMap {
     //super(YailConstants.YAIL_HEADER, LList.Empty);
   }
 
-  public YailDictionary(HashMap<Object, Object> prevMap) {
+  public YailDictionary(LinkedHashMap<Object, Object> prevMap) {
     super(prevMap);
   }
 
@@ -58,16 +58,23 @@ public class YailDictionary extends HashMap {
     return new YailDictionary();
   }
 
-  public static YailDictionary makeDictionary(HashMap<Object, Object> prevMap) {
+  public static YailDictionary makeDictionary(LinkedHashMap<Object, Object> prevMap) {
     return new YailDictionary(prevMap);
   }
 
   public static YailDictionary makeDictionary(List<YailList> pairs) {
-    HashMap<Object, Object> map = new HashMap();
+    LinkedHashMap<Object, Object> map = new LinkedHashMap();
 
     for (int i = 0; i < pairs.size(); i++) {
       YailList currentYailList = pairs.get(i);
-      map.put(currentYailList.getObject(0), currentYailList.getObject(1));
+      Object currentKey = currentYailList.getObject(0);
+      Object currentValue = currentYailList.getObject(1);
+
+      if (currentValue instanceof YailList) {
+        Log.e(LOG_TAG, "List is: " + currentValue);
+      }
+
+      map.put(currentKey, currentValue);
     }
 
     return new YailDictionary(map);
@@ -80,7 +87,11 @@ public class YailDictionary extends HashMap {
     while(itr.hasNext()) {
       Object currentPair = itr.next();
 
-      if (!(currentPair instanceof YailList && ((YailList) currentPair).size() == 2)) {
+      if (!(currentPair instanceof YailList)) {
+        return false;
+      }
+
+      if (!(((YailList) currentPair).size() == 2)) {
         return false;
       }
     }
@@ -89,7 +100,7 @@ public class YailDictionary extends HashMap {
   }
 
   public static YailDictionary alistToDict(YailList alist) {
-    HashMap<Object, Object> map = new HashMap();
+    LinkedHashMap<Object, Object> map = new LinkedHashMap();
 
     Iterator itr = alist.iterator();
     Object yailListHeader = itr.next();
@@ -103,6 +114,10 @@ public class YailDictionary extends HashMap {
       if (currentValue instanceof YailList && isAlist((YailList) currentValue)) {
         map.put(currentKey, alistToDict((YailList) currentValue));
       } else {
+        if (currentValue instanceof YailList) {
+          Log.e(LOG_TAG, "List is: " + currentValue);
+        }
+
         map.put(currentKey, currentValue);
       }
     }
@@ -141,13 +156,15 @@ public class YailDictionary extends HashMap {
     try {
       Form currentForm = Form.getActiveForm();
 
+      Log.e(LOG_TAG, "--------BEFORE GET JSON REP----------");
+
       String jsonRep = JsonUtil.getJsonRepresentation(this);
 
+      Log.e(LOG_TAG, "--------AFTER GET JSON REP----------");
+
       if (currentForm.ShowListsAsJson()) {
-        //currentForm.ShowListsAsJson(false);
         return jsonRep;
       } else {
-        //currentForm.ShowListsAsJson(true);
         Object jsonObject = JsonUtil.getObjectFromJson(jsonRep);
         return jsonObject.toString();
       }

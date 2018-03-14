@@ -168,6 +168,18 @@ Blockly.Yail['dictionaries_copy'] = function() {
   return [ code, Blockly.Yail.ORDER_ATOMIC ];
 };
 
+Blockly.Yail['dictionaries_combine_dicts'] = function() {
+  var argument0 = Blockly.Yail.valueToCode(this, 'DICT1', Blockly.Yail.ORDER_NONE) || Blockly.Yail.YAIL_FALSE;
+  var argument1 = Blockly.Yail.valueToCode(this, 'DICT2', Blockly.Yail.ORDER_NONE) || Blockly.Yail.emptyDictCode;
+  var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + "yail-dictionary-combine-dicts" + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_OPEN_COMBINATION + Blockly.Yail.YAIL_LIST_CONSTRUCTOR + Blockly.Yail.YAIL_SPACER;
+  code = code + argument0 + Blockly.Yail.YAIL_SPACER + argument1 + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_QUOTE + Blockly.Yail.YAIL_OPEN_COMBINATION;
+  code = code + "dictionary dictionary" + Blockly.Yail.YAIL_CLOSE_COMBINATION + Blockly.Yail.YAIL_SPACER;
+  code = code + Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_DOUBLE_QUOTE + "combine 2 dictionaries" + Blockly.Yail.YAIL_DOUBLE_QUOTE + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  return [ code, Blockly.Yail.ORDER_ATOMIC ];
+};
+
 Blockly.Yail['dictionaries_is_dict'] = function() {
   var argument = Blockly.Yail.valueToCode(this, 'THING', Blockly.Yail.ORDER_NONE) || Blockly.Yail.emptyDictCode;
   var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + "yail-dictionary?" + Blockly.Yail.YAIL_SPACER;
