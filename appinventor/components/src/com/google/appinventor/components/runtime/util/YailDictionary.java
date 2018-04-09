@@ -13,9 +13,11 @@ import org.json.JSONException;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.Set;
 
 import android.util.Log;
 
@@ -123,6 +125,31 @@ public class YailDictionary extends LinkedHashMap {
     }
 
     return new YailDictionary(map);
+  }
+
+  public static YailList dictToAlist(YailDictionary dict) {
+    List<Object> list = new ArrayList();
+
+    Set<Object> keys = dict.keySet();
+    Iterator itr = keys.iterator();
+
+    while(itr.hasNext()) {
+      Object currentKey = itr.next();
+      Object currentValue = dict.get(currentKey);
+
+      List<Object> currentPair = new ArrayList();
+      currentPair.add(currentKey);
+
+      if (currentValue instanceof YailDictionary) {
+        currentPair.add(dictToAlist((YailDictionary) currentValue));
+      } else {
+        currentPair.add(currentValue);
+      }
+
+      list.add(YailList.makeList(currentPair));
+    }
+
+    return YailList.makeList(list);
   }
 
   public void setPair(YailList pair) {

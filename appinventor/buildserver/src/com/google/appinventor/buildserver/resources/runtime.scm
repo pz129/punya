@@ -1306,6 +1306,7 @@
 (define (coerce-to-yail-list arg)
   (cond
    ((yail-list? arg) arg)
+   ((yail-dictionary? arg) (yail-dictionary-dict-to-alist arg))
    (else *non-coercible-value*)))
 
 (define (coerce-to-pair arg)
@@ -1314,7 +1315,11 @@
 (define (coerce-to-dictionary arg)
   (cond
     ((yail-dictionary? arg) arg)
-    (else *non-coercible-value*)))
+    ((yail-list? arg) (yail-dictionary-alist-to-dict arg))
+    (else (try-catch
+            (arg:toYailDictionary)
+            (exception java.lang.Exception
+              (*non-coercible-value*))))))
 
 (define (coerce-to-boolean arg)
   (cond
@@ -2211,7 +2216,9 @@ Dictionary implementation.
 - is key in dict            (yail-dictionary-is-key-in key yail-dictionary)
 - get length of dict        (yail-dictionary-length yail-dictionary)
 - get copy of dict          (yail-dictionary-copy yail-dictionary)
+- combine two dicts         (yail-dictionary-combine-dicts first-dictionary second-dictionary)
 - turn alist to dict        (yail-dictionary-alist-to-dict alist)
+- turn dict to alist        (yail-dictionary-dict-to-alist dict)
 
 - is YailDictionary?        (yail-dictionary? x)
 
@@ -2287,8 +2294,16 @@ Dictionary implementation.
           (else (loop (cdr pairs-to-check)))))
   (YailDictionary:alistToDict alist))
 
+(define (yail-dictionary-dict-to-alist dict)
+  (YailDictionary:dictToAlist dict)
+)
+
 (define (yail-dictionary-copy yail-dictionary)
   (*:clone (as YailDictionary yail-dictionary))
+)
+
+(define (yail-dictionary-combine-dicts first-dictionary second-dictionary)
+  (*:putAll (as YailDictionary first-dictionary) second-dictionary)
 )
 
 (define (yail-dictionary? x)

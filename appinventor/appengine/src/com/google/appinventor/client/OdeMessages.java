@@ -4192,6 +4192,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String htmlTextParams();
 
+  @DefaultMessage("jsonObject")
+  @Description("")
+  String jsonObjectParams();
+
   @DefaultMessage("jsonText")
   @Description("")
   String jsonTextParams();
@@ -5469,6 +5473,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("JsonTextDecode")
   @Description("")
   String JsonTextDecodeMethods();
+
+  @DefaultMessage("JsonObjectEncode")
+  @Description("")
+  String JsonObjectEncodeMethods();
 
   @DefaultMessage("XmlTextDecode")
   @Description("")

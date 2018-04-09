@@ -332,6 +332,22 @@ Blockly.Blocks['dictionaries_alist_to_dict'] = {
   typeblock: [{ translatedName: Blockly.Msg.LANG_DICTIONARIES_ALIST_TO_DICT_TITLE }]
 };
 
+Blockly.Blocks['dictionaries_dict_to_alist'] = {
+   // Gets all the values in a dictionary
+  category : 'Dictionaries',
+  //helpUrl : Blockly.Msg.LANG_LISTS_LENGTH_HELPURL,
+  init : function() {
+    this.setColour(Blockly.DICTIONARY_CATEGORY_HUE);
+    this.setOutput(true, Blockly.Blocks.Utilities.YailTypeToBlocklyType("list",Blockly.Blocks.Utilities.OUTPUT));
+    this.appendValueInput('DICT')
+      .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("dictionary",Blockly.Blocks.Utilities.INPUT))
+      .appendField(Blockly.Msg.LANG_DICTIONARIES_DICT_TO_ALIST_TITLE)
+      .appendField(Blockly.Msg.LANG_DICTIONARIES_DICT_TO_ALIST_INPUT);
+    this.setTooltip(Blockly.Msg.LANG_DICTIONARIES_DICT_TO_ALIST_TOOLTIP);
+  },
+  typeblock: [{ translatedName: Blockly.Msg.LANG_DICTIONARIES_DICT_TO_ALIST_TITLE }]
+};
+
 Blockly.Blocks['dictionaries_copy'] = {
    // Gets all the values in a dictionary
   category : 'Dictionaries',

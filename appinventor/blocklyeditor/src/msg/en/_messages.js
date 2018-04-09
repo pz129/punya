@@ -923,6 +923,10 @@ Blockly.Msg.en.switch_language_to_english = {
     Blockly.Msg.LANG_DICTIONARIES_ALIST_TO_DICT_INPUT = 'pairs';
     Blockly.Msg.LANG_DICTIONARIES_ALIST_TO_DICT_TOOLTIP = 'Converts a list of pairs to a dictionary';
 
+    Blockly.Msg.LANG_DICTIONARIES_DICT_TO_ALIST_TITLE = 'dict to list of pairs';
+    Blockly.Msg.LANG_DICTIONARIES_DICT_TO_ALIST_INPUT = 'dict';
+    Blockly.Msg.LANG_DICTIONARIES_DICT_TO_ALIST_TOOLTIP = 'Converts a dictionary to a list of pairs';
+
     Blockly.Msg.LANG_DICTIONARIES_COPY_TITLE = 'copy dict';
     Blockly.Msg.LANG_DICTIONARIES_COPY_INPUT = 'dict';
     Blockly.Msg.LANG_DICTIONARIES_COPY_TOOLTIP = 'Returns a shallow copy of the dictionary';
