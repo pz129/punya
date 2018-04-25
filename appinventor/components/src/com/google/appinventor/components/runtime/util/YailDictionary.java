@@ -73,10 +73,14 @@ public class YailDictionary extends LinkedHashMap {
       Object currentValue = currentYailList.getObject(1);
 
       if (currentValue instanceof YailList) {
-        Log.e(LOG_TAG, "List is: " + currentValue);
+        if (isAlist((YailList) currentValue)) {
+          map.put(currentKey, alistToDict((YailList) currentValue));
+        } else {
+          map.put(currentKey, checkList((YailList) currentValue));
+        }
+      } else {
+        map.put(currentKey, currentValue);
       }
-
-      map.put(currentKey, currentValue);
     }
 
     return new YailDictionary(map);
@@ -117,14 +121,45 @@ public class YailDictionary extends LinkedHashMap {
         map.put(currentKey, alistToDict((YailList) currentValue));
       } else {
         if (currentValue instanceof YailList) {
-          Log.e(LOG_TAG, "List is: " + currentValue);
+          map.put(currentKey, checkList((YailList) currentValue));
+        } else {
+          map.put(currentKey, currentValue);
         }
-
-        map.put(currentKey, currentValue);
       }
     }
 
     return new YailDictionary(map);
+  }
+
+  public static YailList checkList(YailList list) {
+    Object[] checked = new Object[list.size()];
+    int i = 0;
+    Object result = null;
+    Iterator it = list.iterator();
+    it.next();  // skip *list* symbol
+    boolean processed = false;
+    while (it.hasNext()) {
+      Object o = it.next();
+      if (o instanceof YailList) {
+        if (isAlist((YailList) o)) {
+          checked[i] = alistToDict((YailList) o);
+          processed = true;
+        } else {
+          checked[i] = checkList((YailList) o);
+          if (checked[i] != o) {  // identity is used to determine whether the list contained an alist
+            processed = true;
+          }
+        }
+      } else {
+        checked[i] = o;
+      }
+      i++;
+    }
+    if (processed) {
+      return YailList.makeList(checked);
+    } else {
+      return list;  // nothing has changed
+    }
   }
 
   public static YailList dictToAlist(YailDictionary dict) {

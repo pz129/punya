@@ -14,12 +14,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
-import com.google.gson.Gson;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Provides utility functions to convert between Java object and JSON.
@@ -183,8 +184,19 @@ public class JsonUtil {
       value = ((List)value).toArray();
     }
     if (value instanceof YailDictionary) {
-      Gson gson = new Gson(); 
-      return gson.toJson(value);
+      StringBuilder sb = new StringBuilder();
+      YailDictionary dict = (YailDictionary) value;
+      String sep = "";
+      sb.append('{');
+      for (Entry entry : (Set<Entry>) dict.entrySet()) {
+        sb.append(sep);
+        sb.append(JSONObject.quote(entry.getKey().toString()));
+        sb.append(':');
+        sb.append(getJsonRepresentation(entry.getValue()));
+        sep = ",";
+      }
+      sb.append('}');
+      return sb.toString();
     }
     if (value.getClass().isArray()) {
       StringBuilder sb = new StringBuilder();
