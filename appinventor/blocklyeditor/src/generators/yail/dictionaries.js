@@ -123,6 +123,10 @@ Blockly.Yail.dictionaries_getters.OPERATORS = {
   VALUES: ['yail-dictionary-get-values', "get a dictionary's values", Blockly.Yail.ORDER_NONE]
 };
 
+Blockly.Yail['dictionaries_get_values'] = function() {
+  return Blockly.Yail.dictionaries_getters.call(this);
+};
+
 Blockly.Yail['dictionaries_is_key_in'] = function() {
   var argument0 = Blockly.Yail.valueToCode(this, 'KEY', Blockly.Yail.ORDER_NONE) || Blockly.Yail.YAIL_FALSE;
   var argument1 = Blockly.Yail.valueToCode(this, 'DICT', Blockly.Yail.ORDER_NONE) || Blockly.Yail.emptyDictCode;  

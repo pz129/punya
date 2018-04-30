@@ -228,7 +228,6 @@ Blockly.Blocks['dictionary_recursive_lookup'] = {
 };
 
 Blockly.Blocks['dictionaries_getters'] = {
-  // Advanced math operators with single operand.
   category: 'Dictionaries',
   // helpUrl: function () {
   //   var mode = this.getFieldValue('OP');
@@ -239,6 +238,7 @@ Blockly.Blocks['dictionaries_getters'] = {
     this.setOutput(true, Blockly.Blocks.Utilities.YailTypeToBlocklyType("list", Blockly.Blocks.Utilities.OUTPUT));
     this.appendValueInput('DICT')
         .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("dictionary", Blockly.Blocks.Utilities.INPUT))
+        .appendField(Blockly.Msg.LANG_DICTIONARIES_GETTERS_TITLE)
         .appendField(new Blockly.FieldDropdown(this.OPERATORS), 'OP');
     // Assign 'this' to a variable for use in the tooltip closure below.
     var thisBlock = this;
@@ -280,6 +280,28 @@ Blockly.Blocks.dictionaries_getters.TOOLTIPS = function () {
 //     ABS: Blockly.Msg.LANG_MATH_SINGLE_HELPURL_ABS
 //   }
 // };
+
+Blockly.Blocks['dictionaries_get_values'] = {
+  category: 'Dictionaries',
+  // helpUrl: function () {
+  //   var mode = this.getFieldValue('OP');
+  //   return Blockly.Blocks.dictionaries_getters.HELPURLS()[mode];
+  // },
+  init: function () {
+    this.setColour(Blockly.DICTIONARY_CATEGORY_HUE);
+    this.setOutput(true, Blockly.Blocks.Utilities.YailTypeToBlocklyType("list", Blockly.Blocks.Utilities.OUTPUT));
+    this.appendValueInput('DICT')
+        .setCheck(Blockly.Blocks.Utilities.YailTypeToBlocklyType("dictionary", Blockly.Blocks.Utilities.INPUT))
+        .appendField(Blockly.Msg.LANG_DICTIONARIES_GETTERS_TITLE)
+        .appendField(new Blockly.FieldDropdown(Blockly.Blocks.dictionaries_getters.OPERATORS), 'OP');
+    this.setFieldValue('VALUES', "OP");
+    // Assign 'this' to a variable for use in the closures below.
+    var thisBlock = this;
+    this.setTooltip(function () {
+      var mode = thisBlock.getFieldValue('OP');
+      return Blockly.Blocks.dictionaries_getters.TOOLTIPS()[mode];
+    });  }
+};
 
 Blockly.Blocks['dictionaries_is_key_in'] = {
    // Checks if a key is in a dictionary

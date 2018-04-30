@@ -903,11 +903,12 @@ Blockly.Msg.en.switch_language_to_english = {
     Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_TOOLTIP = 'Returns the value in the nested dictionary';
     Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_TITLE = 'recursive look up in a dict';
 
-    Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_TITLE = 'get keys';
+    Blockly.Msg.LANG_DICTIONARIES_GETTERS_TITLE = 'get';
+    Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_TITLE = 'keys';
     Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_INPUT = 'dict';
     Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_TOOLTIP = 'Returns a list of all of the keys in the dictionary';
 
-    Blockly.Msg.LANG_DICTIONARIES_GET_VALUES_TITLE = 'get values';
+    Blockly.Msg.LANG_DICTIONARIES_GET_VALUES_TITLE = 'values';
     Blockly.Msg.LANG_DICTIONARIES_GET_VALUES_INPUT = 'dict';
     Blockly.Msg.LANG_DICTIONARIES_GET_VALUES_TOOLTIP = 'Returns a list of all of the values in the dictionary';
 
