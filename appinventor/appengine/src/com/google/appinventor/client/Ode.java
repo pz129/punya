@@ -55,6 +55,8 @@ import com.google.appinventor.client.wizards.NewProjectWizard.NewProjectCommand;
 import com.google.appinventor.client.wizards.TemplateUploadWizard;
 import com.google.appinventor.common.version.AppInventorFeatures;
 import com.google.appinventor.components.common.YaVersion;
+import com.google.appinventor.shared.rpc.cloudDB.CloudDBAuthService;
+import com.google.appinventor.shared.rpc.cloudDB.CloudDBAuthServiceAsync;
 import com.google.appinventor.shared.rpc.component.ComponentService;
 import com.google.appinventor.shared.rpc.component.ComponentServiceAsync;
 import com.google.appinventor.shared.rpc.GetMotdService;
@@ -265,6 +267,9 @@ public class Ode implements EntryPoint {
   // Web service for component related operations
   private final ComponentServiceAsync componentService = GWT.create(ComponentService.class);
   private final AdminInfoServiceAsync adminInfoService = GWT.create(AdminInfoService.class);
+
+  //Web service for CloudDB authentication operations
+  private final CloudDBAuthServiceAsync cloudDBAuthService = GWT.create(CloudDBAuthService.class);
 
   private boolean windowClosing;
 
@@ -732,6 +737,18 @@ public class Ode implements EntryPoint {
         user = result.getUser();
         isReadOnly = user.isReadOnly();
 
+        // load the user's backpack if we are not using a shared
+        // backpack
+
+        String backPackId = user.getBackpackId();
+        if (backPackId == null || backPackId.isEmpty()) {
+          loadBackpack();
+          OdeLog.log("backpack: No shared backpack");
+        } else {
+          BlocklyPanel.setSharedBackpackId(backPackId);
+          OdeLog.log("Have a shared backpack backPackId = " + backPackId);
+        }
+
         // Setup noop timer (if enabled)
         int noop = config.getNoop();
         if (noop > 0) {
@@ -871,20 +888,6 @@ public class Ode implements EntryPoint {
     // Newer sessions invalidate older sessions.
 
     userInfoService.getSystemConfig(sessionId, callback);
-
-    // We fetch the user's backpack here. This runs asynchronously with the rest
-    // of the system initialization.
-
-    userInfoService.getUserBackpack(new AsyncCallback<String>() {
-        @Override
-        public void onSuccess(String backpack) {
-          BlocklyPanel.setInitialBackpack(backpack);
-        }
-        @Override
-        public void onFailure(Throwable caught) {
-          OdeLog.log("Fetching backpack failed");
-        }
-      });
 
     History.addValueChangeHandler(new ValueChangeHandler<String>() {
       @Override
@@ -1352,6 +1355,15 @@ public class Ode implements EntryPoint {
    */
   public ComponentServiceAsync getComponentService() {
     return componentService;
+  }
+
+  /**
+   * Get an instance of the CloudDBAuth web service.
+   *
+   * @return CloudDBAuth web service instance
+   */
+  public CloudDBAuthServiceAsync getCloudDBAuthService(){
+    return cloudDBAuthService;
   }
 
   /**
@@ -2404,6 +2416,21 @@ public class Ode implements EntryPoint {
       designToolbar.setTutorialToggleVisible(true);
       setTutorialVisible(true);
     }
+  }
+
+  // Load the user's backpack. This is not called if we are using
+  // a shared backpack
+  private void loadBackpack() {
+    userInfoService.getUserBackpack(new AsyncCallback<String>() {
+        @Override
+        public void onSuccess(String backpack) {
+          BlocklyPanel.setInitialBackpack(backpack);
+        }
+        @Override
+        public void onFailure(Throwable caught) {
+          OdeLog.log("Fetching backpack failed");
+        }
+      });
   }
 
   // Native code to set the top level rendezvousServer variable
