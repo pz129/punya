@@ -437,8 +437,10 @@ public class YaVersion {
   // - BLOCKS_LANGUAGE_VERSION was incremented to 23
   // For YOUNG_ANDROID_VERSION 175:
   // - MAP_COMPONENT_VERSION was incremented 5
+  // For YOUNG_ANDROID_VERSION 176:
+  // - Added GraphQL
 
-  public static final int YOUNG_ANDROID_VERSION = 175;
+  public static final int YOUNG_ANDROID_VERSION = 176;
 
   // ............................... Blocks Language Version Number ...............................
 
@@ -1084,6 +1086,10 @@ public class YaVersion {
   // For CLOUDDB_COMPONENT_VERSION 1:
   // - CloudDB component introduced
   public static final int CLOUDDB_COMPONENT_VERSION = 1;
+
+  // For GRAPHQL_COMPONENT_VERSION 1:
+  // - GraphQL component introduced.
+  public static final int GRAPHQL_COMPONENT_VERSION = 1;
 
   // For TWITTER_COMPONENT_VERSION 2:
   // - The Authorize method and IsAuthorized event handler were added to support

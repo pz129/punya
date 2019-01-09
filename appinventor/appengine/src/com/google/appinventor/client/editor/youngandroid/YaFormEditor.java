@@ -595,6 +595,9 @@ public final class YaFormEditor extends SimpleEditor implements FormChangeListen
       }
     }
 
+    // Component has been created.
+    mockComponent.onComponentCreated();
+
     return mockComponent;
   }
 

@@ -7116,4 +7116,45 @@ public interface OdeMessages extends Messages {
       "<br/>These applications will not run on Android versions older than 4.0.")
   @Description("Text for the Package SDK 26 Warning Dialog Box (HTML)")
   String Package26Notice();
+
+  @DefaultMessage("GraphQL")
+  @Description("")
+  String graphQLComponentPallette();
+
+  @DefaultMessage("A non-visible component that allows you to interact with a GraphQL endpoint. " +
+      "Learn more at <a target=\"_blank\" href=\"https://graphql.org/\">graphql.org</a>.")
+  @Description("")
+  String GraphQLHelpStringComponentPallette();
+
+  @DefaultMessage("EndpointURL")
+  @Description("")
+  String GqlEndpointUrlProperties();
+
+  @DefaultMessage("Query")
+  @Description("")
+  String GqlQueryMethods();
+
+  @DefaultMessage("query")
+  @Description("")
+  String gqlQueryParams();
+
+  @DefaultMessage("queryName")
+  @Description("")
+  String gqlQueryNameParams();
+
+  @DefaultMessage("response")
+  @Description("")
+  String gqlResponseParams();
+
+  @DefaultMessage("error")
+  @Description("")
+  String gqlErrorParams();
+
+  @DefaultMessage("GotResponse")
+  @Description("")
+  String GqlGotResponseEvents();
+
+  @DefaultMessage("GotError")
+  @Description("")
+  String GqlGotErrorEvents();
 }
