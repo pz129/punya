@@ -358,10 +358,10 @@ Blockly.ai_inject = function(container, workspace) {
   Blockly.Tooltip.createDom();
   workspace.drawer_ = new Blockly.Drawer(workspace, { scrollbars: true });
   workspace.flyout_ = workspace.drawer_.flyout_;
-  var flydown = new Blockly.Flydown(new Blockly.Options({scrollbars: false}));
+  var flydown = new Blockly.Flydown(new Blockly.Options({scrollbars: true}));
   // ***** [lyn, 10/05/2013] NEED TO WORRY ABOUT MULTIPLE BLOCKLIES! *****
   workspace.flydown_ = flydown;
-  Blockly.utils.insertAfter_(flydown.createDom('g'), workspace.svgBubbleCanvas_);
+  Blockly.utils.insertAfter_(flydown.createDom(''), workspace.svgBubbleCanvas_);
   flydown.init(workspace);
   flydown.autoClose = true; // Flydown closes after selecting a block
   workspace.addWarningIndicator();

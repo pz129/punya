@@ -51,13 +51,25 @@ Blockly.Flydown.prototype.createDom = function(cssClassName) {
   /*
   <g>
     <path class={cssClassName}/>
-    <g></g>
+    <g class="blocklyWorkspace"></g>
   </g>
   */
-  this.previousCSSClassName_ = cssClassName; // Remember class name for later
+  // Remember class name for later
+  this.previousCSSClassName_ = cssClassName;
+
+  // Create main group.
   this.svgGroup_ = Blockly.utils.createSvgElement('g', {'class': cssClassName}, null);
+
+  // Create a background and a clip path consisting of the background.
+  this.clipPath_ = Blockly.utils.createSvgElement('clipPath', {'id': 'flydownClipPath'}, this.svgGroup_);
   this.svgBackground_ = Blockly.utils.createSvgElement('path', {}, this.svgGroup_);
-  this.svgGroup_.appendChild(this.workspace_.createDom());
+  this.svgClipBackground_ = Blockly.utils.createSvgElement('path', {}, this.clipPath_);
+
+  // Create a workspace and use the clipping path.
+  var workspace = this.workspace_.createDom();
+  workspace.setAttribute('clip-path', 'url(#flydownClipPath)');
+  this.svgGroup_.appendChild(workspace);
+
   return this.svgGroup_;
 };
 
@@ -106,6 +118,8 @@ Blockly.Flydown.prototype.showAt = function(xmlList,x,y) {
   // this.svgGroup_.setAttribute('transform', 'translate(' + x + ',' + y + ')');
   // Calculate path around flydown blocks. Based on code in flyout position_ method.
 
+  this.height_ = 300;
+
   // Start at bottom of top left arc and proceed clockwise
   // Flydown outline shape is symmetric about vertical axis, so no need to differentiate LTR and RTL paths.
   var margin = this.CORNER_RADIUS * this.workspace_.scale;
@@ -121,6 +135,7 @@ Blockly.Flydown.prototype.showAt = function(xmlList,x,y) {
   path.push('a', margin, margin, 0, 0, 1, -margin, -margin); // bottom left arc
   path.push('z'); // complete path by drawing left edge
   this.svgBackground_.setAttribute('d', path.join(' '));
+  this.svgClipBackground_.setAttribute('d', path.join(' '));
   this.svgGroup_.setAttribute('transform', 'translate(' + x + ', ' + y + ')');
 }
 
