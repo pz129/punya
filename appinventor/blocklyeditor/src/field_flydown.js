@@ -168,12 +168,8 @@ Blockly.FieldFlydown.prototype.showFlydown_ = function() {
   } else { // if (this.displayLocation === Blockly.FieldFlydown.DISPLAY_RIGHT) {
     x = x + borderBBox.width * flydown.workspace_.scale;
   }
-  flydown.showAt(blocksXMLList, x, y);
-
-  flydown.scrollbar_.setOrigin(x, y);
-  flydown.scrollbar_.resizeViewVertical(flydown.workspace_.getMetrics());
-  flydown.scrollbar_.set(0);
-  flydown.scrollbar_.workspace_.markFocused();
+  flydown.populate(blocksXMLList);
+  flydown.showAt(x, y);
 };
 
 /**

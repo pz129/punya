@@ -30,7 +30,7 @@ goog.inherits(Blockly.Flydown, Blockly.Flyout);
 
 /**
  * Previous CSS class for this flydown
- * @type {number}
+ * @type {string}
  * @const
  */
 Blockly.Flydown.prototype.previousCSSClassName_ = '';
@@ -44,7 +44,7 @@ Blockly.Flydown.prototype.VERTICAL_SEPARATION_FACTOR = 1;
 
 /**
  * Creates the flydown's DOM.  Only needs to be called once.  Overrides the flyout createDom method.
- * @param {!String} cssClassName The name of the CSS class for this flydown. 
+ * @param {!String} cssClassName The name of the CSS class for this flydown.
  * @return {!Element} The flydown's SVG group.
  */
 Blockly.Flydown.prototype.createDom = function(cssClassName) {
@@ -83,7 +83,7 @@ Blockly.Flydown.prototype.setCSSClass = function(newCSSClassName) {
     Blockly.utils.addClass(this.svgGroup_, newCSSClassName);
     this.previousCSSClassName_ = newCSSClassName;
   }
-}
+};
 
 /**
  * Initializes the Flydown.
@@ -91,40 +91,50 @@ Blockly.Flydown.prototype.setCSSClass = function(newCSSClassName) {
  *     blocks.
  */
 Blockly.Flydown.prototype.init = function(workspace) {
-  Blockly.Flyout.prototype.init.call(this, workspace, false); // Flydowns have no scrollbar
-}
+  Blockly.Flyout.prototype.init.call(this, workspace);
+
+  Array.prototype.push.apply(this.eventWrappers_,
+    Blockly.bindEvent_(this.svgGroup_, 'mouseover', this, this.onMouseOver_));
+
+  Array.prototype.push.apply(this.eventWrappers_,
+    Blockly.bindEvent_(this.svgGroup_, 'mouseout', this, this.onMouseOut_));
+};
 
 /**
  * Override the flyout position method to do nothing instead
  * @private
  */
 Blockly.Flydown.prototype.position = function() {
-  return;
-}
+};
 
 /**
- * Show and populate the flydown.
+ * Populate the flydown and computes the width and height. Note that this method does not display the flydown.
  * @param {!Array|string} xmlList List of blocks to show.
- * @param {!num} x x-position of upper-left corner of flydown
- * @param {!num} y y-position of upper-left corner of flydown
  */
-Blockly.Flydown.prototype.showAt = function(xmlList,x,y) {
+Blockly.Flydown.prototype.populate = function(xmlList) {
   Blockly.Events.disable();
+
   try {
-    this.show(xmlList); // invoke flyout method, which adds blocks to flydown and calculates width and height.
+    // invoke flyout method, which adds blocks to flydown and calculates width and height.
+    this.show(xmlList);
   } finally {
     Blockly.Events.enable();
   }
-  // this.svgGroup_.setAttribute('transform', 'translate(' + x + ',' + y + ')');
-  // Calculate path around flydown blocks. Based on code in flyout position_ method.
+};
 
+/**
+ * Show the flydown at a given position. The flydown should have been populated before invoking this method.
+ * @param {!num} x x-position of upper-left corner of flydown.
+ * @param {!num} y y-position of upper-left corner of flydown.
+ */
+Blockly.Flydown.prototype.showAt = function(x, y) {
+  // Start at bottom of top left arc and proceed clockwise.
+  // Flydown outline shape is symmetric about vertical axis, so no need to differentiate LTR and RTL paths.
   this.height_ = 300;
 
-  // Start at bottom of top left arc and proceed clockwise
-  // Flydown outline shape is symmetric about vertical axis, so no need to differentiate LTR and RTL paths.
   var margin = this.CORNER_RADIUS * this.workspace_.scale;
-  var edgeWidth = this.width_ - 2*margin;
-  var edgeHeight = this.height_ - 2*margin;
+  var edgeWidth = this.width_ - 2 * margin;
+  var edgeHeight = this.height_ - 2 * margin;
   var path = ['M 0,' + margin];
   path.push('a', margin, margin, 0, 0, 1, margin, -margin); // upper left arc
   path.push('h', edgeWidth);  // top edge
@@ -137,7 +147,19 @@ Blockly.Flydown.prototype.showAt = function(xmlList,x,y) {
   this.svgBackground_.setAttribute('d', path.join(' '));
   this.svgClipBackground_.setAttribute('d', path.join(' '));
   this.svgGroup_.setAttribute('transform', 'translate(' + x + ', ' + y + ')');
-}
+
+  this.scrollbar_.setOrigin(x, y);
+  this.scrollbar_.resizeViewVertical(this.workspace_.getMetrics());
+  this.scrollbar_.set(0);
+};
+
+Blockly.Flydown.prototype.onMouseOver_ = function(e) {
+  this.workspace_.markFocused();
+};
+
+Blockly.Flydown.prototype.onMouseOut_ = function(e) {
+  this.targetWorkspace_.markFocused();
+};
 
 /**
  * Compute width and height of Flydown.  Position button under each block.
@@ -157,8 +179,9 @@ Blockly.Flydown.prototype.reflow = function() {
     flydownWidth = Math.max(flydownWidth, blockHW.width * scale);
     flydownHeight += blockHW.height * scale;
   }
-  flydownWidth += 2*margin + Blockly.BlockSvg.TAB_WIDTH * scale; // TAB_WIDTH is with of plug
-  flydownHeight += 2*margin + margin*this.VERTICAL_SEPARATION_FACTOR*(blocks.length - 1) + Blockly.BlockSvg.START_HAT_HEIGHT*scale/2.0;
+  flydownWidth += 2 * margin + Blockly.BlockSvg.TAB_WIDTH * scale; // TAB_WIDTH is with of plug
+  flydownWidth += Blockly.Scrollbar.scrollbarThickness; // Add scrollbar width
+  flydownHeight += 2 * margin + margin * this.VERTICAL_SEPARATION_FACTOR * (blocks.length - 1) + Blockly.BlockSvg.START_HAT_HEIGHT * scale / 2.0;
   if (this.width_ != flydownWidth) {
     for (var j = 0, block; block = blocks[j]; j++) {
       var blockHW = block.getHeightWidth();
@@ -173,7 +196,7 @@ Blockly.Flydown.prototype.reflow = function() {
         block.flyoutRect_.setAttribute('width', blockHW.width);
         block.flyoutRect_.setAttribute('height', blockHW.height);
         block.flyoutRect_.setAttribute('x',
-            this.RTL ? blockXY.x - blockHW.width : blockXY.x);
+          this.RTL ? blockXY.x - blockHW.width : blockXY.x);
         block.flyoutRect_.setAttribute('y', blockXY.y);
       }
     }
@@ -182,11 +205,6 @@ Blockly.Flydown.prototype.reflow = function() {
     this.height_ = flydownHeight;
   }
 };
-
-// Blockly.Flydown.prototype.onMouseMove_ = function(e) {
-//   // override Blockly's flyout behavior for moving the flyout.
-//   return;
-// };
 
 /**
  * Copy a block from the flyout to the workspace and position it correctly.
@@ -227,9 +245,9 @@ Blockly.Flydown.prototype.placeNewBlock_ = function(originBlock) {
   var xyNew = targetWorkspace.getSvgXY(svgRootNew);
   // Scale the scroll (getSvgXY did not do this).
   xyNew.x +=
-      targetWorkspace.scrollX / targetWorkspace.scale - targetWorkspace.scrollX;
+    targetWorkspace.scrollX / targetWorkspace.scale - targetWorkspace.scrollX;
   xyNew.y +=
-      targetWorkspace.scrollY / targetWorkspace.scale - targetWorkspace.scrollY;
+    targetWorkspace.scrollY / targetWorkspace.scale - targetWorkspace.scrollY;
   // If the flyout is collapsible and the workspace can't be scrolled.
   if (targetWorkspace.toolbox_ && !targetWorkspace.scrollbar) {
     xyNew.x += targetWorkspace.toolbox_.getWidth() / targetWorkspace.scale;
@@ -249,6 +267,6 @@ Blockly.Flydown.prototype.hide = function() {
     Blockly.FieldDropdown.openFieldFlydown_ = null;
   }
   this.shouldHide = true;
-}
+};
 
 // Note: nothing additional beyond flyout disposal needs to be done to dispose of a flydown.
