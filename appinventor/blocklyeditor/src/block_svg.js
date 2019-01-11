@@ -66,7 +66,8 @@ Blockly.BlockSvg.prototype.onMouseDown_ = (function(func) {
         workspace.getParentSvg().parentNode.focus();
       }
       if (Blockly.FieldFlydown.openFieldFlydown_) {
-        if (goog.dom.contains(Blockly.getMainWorkspace().flydown_.svgGroup_, this.svgGroup_)) {
+        if (Blockly.getMainWorkspace().flydown_ &&
+          goog.dom.contains(Blockly.getMainWorkspace().flydown_.svgGroup_, this.svgGroup_)) {
           //prevent hiding the flyout if a child block is the target
           Blockly.getMainWorkspace().flydown_.shouldHide = false;
         }

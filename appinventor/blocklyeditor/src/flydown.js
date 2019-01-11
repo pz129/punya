@@ -183,10 +183,10 @@ Blockly.Flydown.prototype.reflow = function() {
   }
 };
 
-Blockly.Flydown.prototype.onMouseMove_ = function(e) {
-  // override Blockly's flyout behavior for moving the flyout.
-  return;
-};
+// Blockly.Flydown.prototype.onMouseMove_ = function(e) {
+//   // override Blockly's flyout behavior for moving the flyout.
+//   return;
+// };
 
 /**
  * Copy a block from the flyout to the workspace and position it correctly.

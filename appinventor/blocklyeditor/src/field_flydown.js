@@ -169,9 +169,11 @@ Blockly.FieldFlydown.prototype.showFlydown_ = function() {
     x = x + borderBBox.width * flydown.workspace_.scale;
   }
   flydown.showAt(blocksXMLList, x, y);
+
   flydown.scrollbar_.setOrigin(x, y);
   flydown.scrollbar_.resizeViewVertical(flydown.workspace_.getMetrics());
   flydown.scrollbar_.set(0);
+  flydown.scrollbar_.workspace_.markFocused();
 };
 
 /**
