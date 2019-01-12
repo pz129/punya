@@ -49,9 +49,12 @@ Blockly.Flydown.prototype.VERTICAL_SEPARATION_FACTOR = 1;
  */
 Blockly.Flydown.prototype.createDom = function(cssClassName) {
   /*
-  <g>
-    <path class={cssClassName}/>
-    <g class="blocklyWorkspace"></g>
+  <g class={cssClassName}>
+    <path/>
+    <clipPath id="flydownClipPath">
+      <path/>
+    </clipPath>
+    <g class="blocklyWorkspace" clip-path="url(#flydownClipPath)"></g>
   </g>
   */
   // Remember class name for later
@@ -61,8 +64,8 @@ Blockly.Flydown.prototype.createDom = function(cssClassName) {
   this.svgGroup_ = Blockly.utils.createSvgElement('g', {'class': cssClassName}, null);
 
   // Create a background and a clip path consisting of the background.
-  this.clipPath_ = Blockly.utils.createSvgElement('clipPath', {'id': 'flydownClipPath'}, this.svgGroup_);
   this.svgBackground_ = Blockly.utils.createSvgElement('path', {}, this.svgGroup_);
+  this.clipPath_ = Blockly.utils.createSvgElement('clipPath', {'id': 'flydownClipPath'}, this.svgGroup_);
   this.svgClipBackground_ = Blockly.utils.createSvgElement('path', {}, this.clipPath_);
 
   // Create a workspace and use the clipping path.
@@ -93,9 +96,9 @@ Blockly.Flydown.prototype.setCSSClass = function(newCSSClassName) {
 Blockly.Flydown.prototype.init = function(workspace) {
   Blockly.Flyout.prototype.init.call(this, workspace);
 
+  // Determine which workspace to mark as focused based on where the mouse is.
   Array.prototype.push.apply(this.eventWrappers_,
     Blockly.bindEvent_(this.svgGroup_, 'mouseover', this, this.onMouseOver_));
-
   Array.prototype.push.apply(this.eventWrappers_,
     Blockly.bindEvent_(this.svgGroup_, 'mouseout', this, this.onMouseOut_));
 };
@@ -108,7 +111,7 @@ Blockly.Flydown.prototype.position = function() {
 };
 
 /**
- * Populate the flydown and computes the width and height. Note that this method does not display the flydown.
+ * Populate the flydown and computes the width and height.
  * @param {!Array|string} xmlList List of blocks to show.
  */
 Blockly.Flydown.prototype.populate = function(xmlList) {
@@ -129,9 +132,7 @@ Blockly.Flydown.prototype.populate = function(xmlList) {
  */
 Blockly.Flydown.prototype.showAt = function(x, y) {
   // Start at bottom of top left arc and proceed clockwise.
-  // Flydown outline shape is symmetric about vertical axis, so no need to differentiate LTR and RTL paths.
-  this.height_ = 300;
-
+  // Flydown outline shape is symmetric about vertical axis, so no need to differentiate LTR and RTL path.
   var margin = this.CORNER_RADIUS * this.workspace_.scale;
   var edgeWidth = this.width_ - 2 * margin;
   var edgeHeight = this.height_ - 2 * margin;
@@ -144,19 +145,43 @@ Blockly.Flydown.prototype.showAt = function(x, y) {
   path.push('h', -edgeWidth); // bottom edge, drawn backwards
   path.push('a', margin, margin, 0, 0, 1, -margin, -margin); // bottom left arc
   path.push('z'); // complete path by drawing left edge
+
+  // Update the background and clip-path.
   this.svgBackground_.setAttribute('d', path.join(' '));
   this.svgClipBackground_.setAttribute('d', path.join(' '));
+
+  // Move the flydown to the appropriate location.
   this.svgGroup_.setAttribute('transform', 'translate(' + x + ', ' + y + ')');
 
+  // Get the metrics for the current populated flydown.
+  var metrics = this.getMetrics_();
+
+  // Trick the scrollbar to not display when there is enough space. This is necessary because the scrollbar subtracts
+  // one pixel from the view height.
+  if (metrics.viewHeight >= metrics.contentHeight) {
+    metrics.viewHeight += 1;
+  }
+
+  // Display the scrollbar and reset the scroll.
   this.scrollbar_.setOrigin(x, y);
-  this.scrollbar_.resizeViewVertical(this.workspace_.getMetrics());
+  this.scrollbar_.resizeViewVertical(metrics);
   this.scrollbar_.set(0);
 };
 
+/**
+ * Handle mouse over events by focusing on the flydown workspace.
+ * @param {!Event} e Mouse over event.
+ * @private
+ */
 Blockly.Flydown.prototype.onMouseOver_ = function(e) {
   this.workspace_.markFocused();
 };
 
+/**
+ * Handle mouse out events by focusing on the flydown's target workspace.
+ * @param {!Event} e Mouse out event.
+ * @private
+ */
 Blockly.Flydown.prototype.onMouseOut_ = function(e) {
   this.targetWorkspace_.markFocused();
 };

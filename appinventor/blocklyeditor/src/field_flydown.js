@@ -34,7 +34,7 @@ Blockly.FieldFlydown = function(name, isEditable, displayLocation, opt_changeHan
   Blockly.FieldFlydown.superClass_.constructor.call(this, name, opt_changeHandler);
 
   this.EDITABLE = isEditable; // This by itself does not control editability
-  this.displayLocation = displayLocation; // [lyn, 10/27/13] Make flydown direction an instance variable
+  this.displayLocation = displayLocation || Blockly.FieldFlydown.DISPLAY_LOCATION;
 };
 goog.inherits(Blockly.FieldFlydown, Blockly.FieldTextInput);
 
@@ -64,7 +64,7 @@ Blockly.FieldFlydown.openFieldFlydown_ = null;
  */
 Blockly.FieldFlydown.DISPLAY_BELOW = "BELOW";
 Blockly.FieldFlydown.DISPLAY_RIGHT = "RIGHT";
-Blockly.FieldFlydown.DISPLAY_LOCATION = Blockly.FieldFlydown.DISPLAY_BELOW; // [lyn, 10/14/13] Make global for now, change in future
+Blockly.FieldFlydown.DISPLAY_LOCATION = Blockly.FieldFlydown.DISPLAY_RIGHT; // [lyn, 10/14/13] Make global for now, change in future
 
 /**
  * Default CSS class name for the field itself
@@ -144,31 +144,108 @@ Blockly.FieldFlydown.prototype.showFlydownMaker_ = function() {
  * Creates a Flydown block of the getter and setter blocks for the parameter name in this field.
  */
 Blockly.FieldFlydown.prototype.showFlydown_ = function() {
-  // Create XML elements from blocks and then create the blocks from the XML elements.
-  // This is a bit crazy, but it's simplest that way. Otherwise, we'd have to duplicate
-  // much of the code in Blockly.Flydown.prototype.show.
-  // alert("FieldFlydown show Flydown");
-  Blockly.hideChaff(); // Hide open context menus, dropDowns, flyouts, and other flydowns
-  Blockly.FieldFlydown.openFieldFlydown_ = this; // Remember field to which flydown is attached
+  // Hide open context menus, dropdowns, flyouts, and other flydowns.
+  Blockly.hideChaff();
+
+  // Remember field to which flydown is attached.
+  Blockly.FieldFlydown.openFieldFlydown_ = this;
+
+  // A single flydown instance is shared in the main workspace.
   var flydown = Blockly.getMainWorkspace().getFlydown();
-  // adjust scale for current zoom level
-  flydown.workspace_.setScale(flydown.targetWorkspace_.scale);
-  flydown.setCSSClass(this.flyoutCSSClassName); // This could have been changed by another field.
+
+  // Adjust scale for current zoom level.
+  var scale = flydown.targetWorkspace_.scale;
+  flydown.workspace_.setScale(scale);
+
+  // Update the class, which could have been overriden by a subclass.
+  flydown.setCSSClass(this.flyoutCSSClassName);
+
+  // Populate the flydown with blocks.
   var blocksXMLText = this.flydownBlocksXML_();
   var blocksDom = Blockly.Xml.textToDom(blocksXMLText);
-  // [lyn, 11/10/13] Use goog.dom.getChildren rather than .children or .childNodes
-  //   to make this code work across browsers.
-  var blocksXMLList = goog.dom.getChildren(blocksDom); // List of blocks for flydown
+  var blocksXMLList = goog.dom.getChildren(blocksDom);
+  flydown.populate(blocksXMLList);
+
+  // Get the boarder rectangle for the input field.
   var xy = Blockly.getMainWorkspace().getSvgXY(this.borderRect_);
   var borderBBox = this.borderRect_.getBBox();
+
+  // While the flydown width is correctly computed, the height should be computed from the content height and not
+  // container height (which is what we are trying to adjust here).
+  var metrics = flydown.getMetrics_();
+  flydown.height_ = metrics.contentHeight + 2 * Blockly.Flyout.prototype.SCROLLBAR_PADDING;
+
+  // Get the metrics of the main workspace.
+  var workspaceMetrics = Blockly.getMainWorkspace().getMetrics();
+  var workspaceWidth = workspaceMetrics.viewWidth;
+  var workspaceHeight = workspaceMetrics.viewHeight;
+
+  // Get the available space depending on positioning. Place a margin of scrollbar thickness.
+  if (this.displayLocation === Blockly.FieldFlydown.DISPLAY_BELOW) {
+    var spaceUp = xy.y - Blockly.Scrollbar.scrollbarThickness;
+    var spaceDown = workspaceHeight - spaceUp - borderBBox.height * scale;
+    var spaceRight = workspaceWidth - xy.x - Blockly.Scrollbar.scrollbarThickness;
+    var spaceLeft = xy.x + borderBBox.width * scale - Blockly.Scrollbar.scrollbarThickness;
+  } else {
+    var spaceLeft = xy.x - Blockly.Scrollbar.scrollbarThickness;
+    var spaceRight = workspaceWidth - spaceLeft - borderBBox.width * scale;
+    var spaceDown = workspaceHeight - xy.y - Blockly.Scrollbar.scrollbarThickness;
+    var spaceUp = xy.y + borderBBox.height * scale - Blockly.Scrollbar.scrollbarThickness;
+  }
+
+  // Determine whether we should invert the flydown.
+  var invertVertical = false;
+  var invertHorizontal = false;
+
+  // If there is not enough space below but there is enough space above, invert the flydown.
+  if (spaceDown < flydown.height_ && spaceUp >= flydown.height_) {
+    invertVertical = true;
+  }
+
+  // If there is not enough space in either direction, invert as necessary to give the most vertical space to the
+  // flydown and adjust its height.
+  if (spaceDown < flydown.height_ && spaceUp < flydown.height_) {
+    invertVertical = spaceUp > spaceDown;
+    flydown.height_ = Math.max(spaceUp, spaceDown);
+  }
+
+  // If there is not enough horizontal space, invert as necessary to give the most horizontal view space.
+  if (spaceRight < flydown.width_) {
+    invertHorizontal = spaceLeft > spaceRight;
+  }
+
+  // Begin computation of absolute flydown offset.
   var x = xy.x;
   var y = xy.y;
+
+  // Determine where to display the flydown.
   if (this.displayLocation === Blockly.FieldFlydown.DISPLAY_BELOW) {
-    y = y + borderBBox.height * flydown.workspace_.scale;
-  } else { // if (this.displayLocation === Blockly.FieldFlydown.DISPLAY_RIGHT) {
-    x = x + borderBBox.width * flydown.workspace_.scale;
+    // Handle vertical inverts.
+    if (invertVertical) {
+      y -= flydown.height_;
+    } else {
+      y += borderBBox.height * scale;
+    }
+
+    // Handle horizontal inverts.
+    if (invertHorizontal) {
+      x -= flydown.width_ - borderBBox.width * scale;
+    }
+  } else if (this.displayLocation === Blockly.FieldFlydown.DISPLAY_RIGHT) {
+    // Handle horizontal inverts.
+    if (invertHorizontal) {
+      x -= flydown.width_;
+    } else {
+      x += borderBBox.width * scale;
+    }
+
+    // Handle vertical inverts.
+    if (invertVertical) {
+      y -= flydown.height_ - borderBBox.height * scale;
+    }
   }
-  flydown.populate(blocksXMLList);
+
+  // Display the flyout at the computed location.
   flydown.showAt(x, y);
 };
 
