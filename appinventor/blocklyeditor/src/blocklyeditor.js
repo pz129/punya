@@ -364,7 +364,7 @@ Blockly.ai_inject = function(container, workspace) {
   var flydown = new Blockly.Flydown(new Blockly.Options({scrollbars: true}));
   // ***** [lyn, 10/05/2013] NEED TO WORRY ABOUT MULTIPLE BLOCKLIES! *****
   workspace.flydown_ = flydown;
-  workspace.svgGroup_.appendChild(flydown.createDom(''));
+  workspace.getParentSvg().appendChild(flydown.createDom(''));
   flydown.init(workspace);
   flydown.autoClose = true; // Flydown closes after selecting a block
 
