@@ -100,8 +100,34 @@ Blockly.GraphQLBlock.schemas = {};
 // Register an instance with an endpoint.
 Blockly.GraphQLBlock.registerInstance = function(uid, endpointUrl) {
   // Add instance.
-  // TODO(bobbyluig): Figure out whether cleanup is necessary and if this is too hacky.
   Blockly.GraphQLBlock.instances[uid] = endpointUrl;
+
+  // Update (or fetch) the schema for the associated endpoint
+  Blockly.GraphQLBlock.updateSchema(endpointUrl);
+};
+
+// Unregister an instance.
+Blockly.GraphQLBlock.unregisterInstance = function(uid) {
+  // Get the endpoint associated with the instance.
+  var endpointUrl = Blockly.GraphQLBlock.instances[uid];
+
+  // If the instance is not registered, we are done.
+  if (endpointUrl === undefined) {
+    return;
+  }
+
+  // Remove the entry.
+  delete Blockly.GraphQLBlock.instances[uid];
+
+  // Find another instance with the same endpoint.
+  var otherUid = goog.array.find(Object.values(Blockly.GraphQLBlock.instances), function (url) {
+    return url === endpointUrl;
+  });
+
+  // Remove the schema if this was the last associated instance.
+  if (otherUid === null) {
+    delete Blockly.GraphQLBlock.schemas[endpointUrl];
+  }
 };
 
 // Generates an array of top-level blocks associated with the given instance.

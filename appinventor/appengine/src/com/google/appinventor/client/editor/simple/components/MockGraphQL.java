@@ -36,20 +36,30 @@ public class MockGraphQL extends MockNonVisibleComponent {
 
     // If the property change was the endpoint, update the schema.
     if (PROPERTY_NAME_GQL_ENDPOINT_URL.equals(propertyName) && !newValue.isEmpty()) {
-      updateSchema(newValue);
+      register(newValue);
     }
   }
 
+  @Override
+  public void onRemoved() {
+    unregister();
+  }
 
   /**
-   * Updates the schema of this component.
+   * Registers this instance with a given endpoint.
    *
    * @param url the endpoint to use.
    */
-  private native void updateSchema(String url) /*-{
+  private native void register(String url) /*-{
     var uid = this.@com.google.appinventor.client.editor.simple.components.MockGraphQL::getUuid()();
-    // Update the schema and register this block.
-    Blockly.GraphQLBlock.updateSchema(url);
     Blockly.GraphQLBlock.registerInstance(uid, url);
+  }-*/;
+
+  /**
+   * Unregisters this instance.
+   */
+  private native void unregister() /*-{
+    var uid = this.@com.google.appinventor.client.editor.simple.components.MockGraphQL::getUuid()();
+    Blockly.GraphQLBlock.unregisterInstance(uid);
   }-*/;
 }
