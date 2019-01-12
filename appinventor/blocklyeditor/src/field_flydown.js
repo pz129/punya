@@ -183,12 +183,12 @@ Blockly.FieldFlydown.prototype.showFlydown_ = function() {
   // Get the available space depending on positioning. Place a margin of scrollbar thickness.
   if (this.displayLocation === Blockly.FieldFlydown.DISPLAY_BELOW) {
     var spaceUp = xy.y - Blockly.Scrollbar.scrollbarThickness;
-    var spaceDown = workspaceHeight - spaceUp - borderBBox.height * scale;
+    var spaceDown = workspaceHeight - xy.y - borderBBox.height * scale - Blockly.Scrollbar.scrollbarThickness;
     var spaceRight = workspaceWidth - xy.x - Blockly.Scrollbar.scrollbarThickness;
     var spaceLeft = xy.x + borderBBox.width * scale - Blockly.Scrollbar.scrollbarThickness;
   } else {
     var spaceLeft = xy.x - Blockly.Scrollbar.scrollbarThickness;
-    var spaceRight = workspaceWidth - spaceLeft - borderBBox.width * scale;
+    var spaceRight = workspaceWidth - xy.x - borderBBox.width * scale - Blockly.Scrollbar.scrollbarThickness;
     var spaceDown = workspaceHeight - xy.y - Blockly.Scrollbar.scrollbarThickness;
     var spaceUp = xy.y + borderBBox.height * scale - Blockly.Scrollbar.scrollbarThickness;
   }
@@ -203,9 +203,10 @@ Blockly.FieldFlydown.prototype.showFlydown_ = function() {
   }
 
   // If there is not enough space in either direction, invert as necessary to give the most vertical space to the
-  // flydown and adjust its height.
+  // flydown and adjust its size.
   if (spaceDown < flydown.height_ && spaceUp < flydown.height_) {
     invertVertical = spaceUp > spaceDown;
+    flydown.width_ += Blockly.Scrollbar.scrollbarThickness;
     flydown.height_ = Math.max(spaceUp, spaceDown);
   }
 

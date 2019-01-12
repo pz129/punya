@@ -205,7 +205,6 @@ Blockly.Flydown.prototype.reflow = function() {
     flydownHeight += blockHW.height * scale;
   }
   flydownWidth += 2 * margin + Blockly.BlockSvg.TAB_WIDTH * scale; // TAB_WIDTH is with of plug
-  flydownWidth += Blockly.Scrollbar.scrollbarThickness; // Add scrollbar width
   flydownHeight += 2 * margin + margin * this.VERTICAL_SEPARATION_FACTOR * (blocks.length - 1) + Blockly.BlockSvg.START_HAT_HEIGHT * scale / 2.0;
   if (this.width_ != flydownWidth) {
     for (var j = 0, block; block = blocks[j]; j++) {
