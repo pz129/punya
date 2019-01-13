@@ -566,6 +566,11 @@ Blockly.WarningHandler.prototype['checkGql'] = function(block) {
     return false;
   }
 
+  // Only perform checks on known parent types.
+  if (parentBlock.typeName !== 'GraphQL' && parentBlock.type !== 'gql') {
+    return;
+  }
+
   // If the parent block is the query method, perform root and endpoint checking.
   if (parentBlock.typeName === 'GraphQL') {
     // Fetch the endpoint of the instance block.
