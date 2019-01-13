@@ -612,8 +612,8 @@ Blockly.WarningHandler.prototype['checkGql'] = function(block) {
   var parentType = schema.types[block.gqlParentType];
 
   // Check for field validity.
-  if (block.gqlParentType !== parentBlock.gqlType || parentType.fields.hasOwnProperty(block.gqlName)) {
-    if (this.showWarningsToggle) block.setWarningText('This field is not valid in the parent object.', 'gql');
+  if (block.gqlParentType !== parentBlock.gqlType || !parentType.fields.hasOwnProperty(block.gqlName)) {
+    if (this.showWarningsToggle) block.setWarningText('This field is not valid in the parent object.');
     return true;
   }
 
