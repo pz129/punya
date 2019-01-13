@@ -555,3 +555,68 @@ Blockly.WarningHandler.prototype['checkReplErrors'] = function(block) {
   }
   return false;
 };
+
+// Check if there are any GraphQL block warnings.
+Blockly.WarningHandler.prototype['checkGql'] = function(block) {
+  // Get the parent block.
+  var parentBlock = block.getParent();
+
+  // Only perform checks on blocks with a parent.
+  if (parentBlock === null) {
+    return false;
+  }
+
+  // If the parent block is the query method, perform root and endpoint checking.
+  if (parentBlock.typeName === 'GraphQL') {
+    // Fetch the endpoint of the instance block.
+    var uid = this.workspace.componentDb_.getUidForName(parentBlock.instanceName);
+    var endpoint = Blockly.GraphQLBlock.instances[uid];
+
+    // Determine if the endpoints match.
+    if (endpoint !== block.gqlUrl) {
+      if (this.showWarningsToggle) block.setWarningText('The endpoint is different from that of the instance.');
+      return true;
+    }
+
+    // Fetch the schema for the endpoint.
+    var schema = Blockly.GraphQLBlock.schemas[endpoint];
+
+    // Only perform root checking for updated schemas.
+    if (schema === undefined) {
+      return false;
+    }
+
+    // Determine if the block is a valid root field.
+    if (!schema.types[''].fields.hasOwnProperty(block.gqlName)) {
+      if (this.showWarningsToggle) block.setWarningText('This field is not a valid root field.');
+      return true;
+    }
+
+    // All checks passed.
+    return false;
+  }
+
+  // Check endpoint compatibility.
+  if (block.gqlUrl !== parentBlock.gqlUrl) {
+    if (this.showWarningsToggle) block.setWarningText('The endpoint is different from that of the parent.');
+    return true;
+  }
+
+  // Object type checking is only valid on blocks with an updated schema.
+  if (block.gqlType === undefined || parentBlock.gqlType === undefined) {
+    return false;
+  }
+
+  // Fetch the schema and parent type, which must exist.
+  var schema = Blockly.GraphQLBlock.schemas[block.gqlUrl];
+  var parentType = schema.types[block.gqlParentType];
+
+  // Check for field validity.
+  if (block.gqlParentType !== parentBlock.gqlType || parentType.fields.hasOwnProperty(block.gqlName)) {
+    if (this.showWarningsToggle) block.setWarningText('This field is not valid in the parent object.', 'gql');
+    return true;
+  }
+
+  // All checks passed.
+  return false;
+};

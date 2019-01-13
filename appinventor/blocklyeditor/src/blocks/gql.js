@@ -120,7 +120,7 @@ Blockly.GraphQLBlock.unregisterInstance = function(uid) {
   delete Blockly.GraphQLBlock.instances[uid];
 
   // Find another instance with the same endpoint.
-  var otherUid = goog.array.find(Object.values(Blockly.GraphQLBlock.instances), function (url) {
+  var otherUid = goog.array.find(Object.values(Blockly.GraphQLBlock.instances), function(url) {
     return url === endpointUrl;
   });
 
@@ -166,8 +166,26 @@ Blockly.GraphQLBlock.traverseTypeRef = function(typeRef) {
   return typeRef;
 };
 
+// Traverses a type reference to get a pretty type string.
+Blockly.GraphQLBlock.prettyType = function(typeRef) {
+  // Handle base case.
+  if (typeRef.ofType === null) {
+    return typeRef.name;
+  }
+
+  // Handle not null types.
+  if (typeRef.kind === 'NOT_NULL') {
+    return Blockly.GraphQLBlock.prettyType(typeRef.ofType) + '!';
+  }
+
+  // Handle list types.
+  if (typeRef.kind === 'LIST') {
+    return '[' + Blockly.GraphQLBlock.prettyType(typeRef.ofType) + ']';
+  }
+};
+
 // Creates a list of block elements from a given type.
-Blockly.GraphQLBlock.buildTypeBlocks = function(gqlUrl, gqlType) {
+  Blockly.GraphQLBlock.buildTypeBlocks = function(gqlUrl, gqlType) {
   // Fetch the associated type.
   var schema = Blockly.GraphQLBlock.schemas[gqlUrl];
   var type = schema.types[gqlType];
@@ -441,15 +459,8 @@ Blockly.Blocks['gql'] = {
     // Default to inline inputs.
     // this.setInputsInline(true);
 
-    // The return type of a block encapsulates its endpoint, its parent type, and its own field name.
+    // The return type of the block is a string.
     this.setOutput(['String']);
-
-    // TODO(bobbyluig): Set output to proper type.
-    // if (!!this.gqlParentType) {
-    //   this.setOutput(true, encodeURI(this.gqlUrl) + ' ' + this.gqlName);
-    // } else {
-    //   this.setOutput(true, encodeURI(this.gqlUrl) + ' ' + this.gqlParentType + ' ' + this.gqlName);
-    // }
 
     // For non-scalar blocks, users should be able add and remove fields.
     if (this.gqlIsObject) {
@@ -471,6 +482,8 @@ Blockly.Blocks['gql'] = {
     this.updateSchema();
   },
 
+  warnings: [{name: 'checkGql'}],
+
   updateContainerBlock: function(containerBlock) {
     containerBlock.setFieldValue('object', 'CONTAINER_TEXT');
     containerBlock.setTooltip('Add, remove, or reorder fields to reconfigure this GraphQL block.');
@@ -487,6 +500,16 @@ Blockly.Blocks['gql'] = {
   },
   addInput: function(inputNumber) {
     return this.appendIndentedValueInput(this.repeatingInputName + inputNumber);
+  },
+
+  onchange: function(e) {
+    // Don't trigger error or warning checks on transient actions.
+    if (e.isTransient) {
+      return false;
+    }
+
+    // Perform error and warning checking.
+    return this.workspace.getWarningHandler() && this.workspace.getWarningHandler().checkErrors(this);
   },
 
   updateSchema: function() {
@@ -547,9 +570,8 @@ Blockly.Blocks['gql'] = {
       this.setTooltip(description);
     }
 
-    // TODO(bobbyluig): Do type checks on parameter here.
-    // TODO(bobbyluig): Update parameters and parameter types here.
-    // TODO(bobbyluig): Do type checks on fields here.
+    // Perform error and warning checking.
+    this.workspace.getWarningHandler() && this.workspace.getWarningHandler().checkErrors(this);
   }
 };
 
