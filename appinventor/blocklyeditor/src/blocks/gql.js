@@ -155,7 +155,7 @@ Blockly.GraphQLBlock.instanceBlocks = function(uid) {
   return blocks;
 };
 
-// Traverses a type reference to get the base type.
+// Traverses a type reference to get the base type reference.
 Blockly.GraphQLBlock.traverseTypeRef = function(typeRef) {
   // Traverse type reference until we reach a base type.
   while (typeRef.kind === 'LIST' || typeRef.kind === 'NON_NULL') {
@@ -166,29 +166,29 @@ Blockly.GraphQLBlock.traverseTypeRef = function(typeRef) {
   return typeRef;
 };
 
-// Traverses a type reference to get a pretty type string.
-Blockly.GraphQLBlock.prettyType = function(typeRef) {
+// Traverses a type reference to get a type string.
+Blockly.GraphQLBlock.typeString = function(typeRef) {
   // Handle base case.
   if (typeRef.ofType === null) {
     return typeRef.name;
   }
 
   // Handle not null types.
-  if (typeRef.kind === 'NOT_NULL') {
-    return Blockly.GraphQLBlock.prettyType(typeRef.ofType) + '!';
+  if (typeRef.kind === 'NON_NULL') {
+    return Blockly.GraphQLBlock.typeString(typeRef.ofType) + '!';
   }
 
   // Handle list types.
   if (typeRef.kind === 'LIST') {
-    return '[' + Blockly.GraphQLBlock.prettyType(typeRef.ofType) + ']';
+    return '[' + Blockly.GraphQLBlock.typeString(typeRef.ofType) + ']';
   }
 };
 
 // Creates a list of block elements from a given type.
-  Blockly.GraphQLBlock.buildTypeBlocks = function(gqlUrl, gqlType) {
+  Blockly.GraphQLBlock.buildTypeBlocks = function(gqlUrl, gqlBaseType) {
   // Fetch the associated type.
   var schema = Blockly.GraphQLBlock.schemas[gqlUrl];
-  var type = schema.types[gqlType];
+  var type = schema.types[gqlBaseType];
 
   // Create an array to store blocks.
   var blocks = [];
@@ -212,7 +212,7 @@ Blockly.GraphQLBlock.prettyType = function(typeRef) {
     // Create a new mutation.
     var mutation = document.createElement('mutation');
     mutation.setAttribute('gql_url', gqlUrl);
-    mutation.setAttribute('gql_parent_type', gqlType);
+    mutation.setAttribute('gql_parent', gqlBaseType);
     mutation.setAttribute('gql_name', fieldName);
     block.appendChild(mutation);
 
@@ -225,12 +225,12 @@ Blockly.GraphQLBlock.prettyType = function(typeRef) {
     for (var j = 0, arg; arg = field.args[j]; j++) {
       var gqlParameter = document.createElement('gql_parameter');
 
-      // Get parameter type reference.
-      var parameterTypeRef = Blockly.GraphQLBlock.traverseTypeRef(arg.type);
+      // Get the parameter's full type string.
+      var fullType = Blockly.GraphQLBlock.typeString(arg.type);
 
       // Add parameter attributes.
       gqlParameter.setAttribute('gql_name', arg.name);
-      gqlParameter.setAttribute('gql_type', parameterTypeRef.name);
+      gqlParameter.setAttribute('gql_type', fullType);
 
       // Add parameter to mutation.
       mutation.appendChild(gqlParameter);
@@ -348,7 +348,6 @@ Blockly.GraphQLBlock.updateSchema = function(endpoint) {
     var allBlocks = Blockly.mainWorkspace.getAllBlocks();
 
     // Go through blocks.
-    // TODO(bobbyluig): Make this faster.
     for (var i = 0, block; block = allBlocks[i]; i++) {
       // Filter by GraphQL blocks with the matching endpoint.
       if (block.type === 'gql' && block.gqlUrl === endpoint) {
@@ -371,10 +370,31 @@ Blockly.Blocks['gql_mutator'] = {
   }
 };
 
+// The GraphQL null argument shadow block, which represents the default value of a nullable type.
+Blockly.Blocks['gql_null'] = {
+  init: function() {
+    this.setColour(Blockly.GraphQLBlock.PRIMARY_COLOR);
+    this.appendDummyInput().appendField('null');
+    this.setOutput(true);
+    this.setShadow(true);
+  }
+};
+
 // The base GraphQL block type.
 Blockly.Blocks['gql'] = {
-  gqlTypeToYailType: function(gqlType) {
-    switch (gqlType) {
+  gqlTypeToYailType: function(typeString) {
+    // Strip out the not null character at the end.
+    if (typeString.endsWith('!')) {
+      typeString = typeString.substring(0, typeString.length - 1);
+    }
+
+    // Check for list type.
+    if (typeString.startsWith('[') && typeString.endsWith(']')) {
+      return 'list';
+    }
+
+    // Check for primitive types, defaulting to any for unknown types.
+    switch (typeString) {
       case 'Int':
       case 'Float':
         return 'number';
@@ -383,6 +403,8 @@ Blockly.Blocks['gql'] = {
         return 'text';
       case 'Boolean':
         return 'boolean';
+      default:
+        return 'any';
     }
   },
 
@@ -398,7 +420,7 @@ Blockly.Blocks['gql'] = {
     // Set basic attributes for this block shared by all GraphQL blocks.
     mutation.setAttribute('gql_url', this.gqlUrl);
     mutation.setAttribute('gql_name', this.gqlName);
-    mutation.setAttribute('gql_parent_type', this.gqlParentType);
+    mutation.setAttribute('gql_parent', this.gqlParent);
 
     // If this block is not a scalar, store its field count.
     if (this.gqlIsObject) {
@@ -424,7 +446,7 @@ Blockly.Blocks['gql'] = {
     // Extract basic mutation attributes shared by all GraphQL blocks.
     this.gqlUrl = xmlElement.getAttribute('gql_url');
     this.gqlName = xmlElement.getAttribute('gql_name');
-    this.gqlParentType = xmlElement.getAttribute('gql_parent_type');
+    this.gqlParent = xmlElement.getAttribute('gql_parent');
 
     // Determine whether the block is an object or a scalar.
     this.gqlIsObject = xmlElement.hasAttribute('gql_fields');
@@ -449,15 +471,18 @@ Blockly.Blocks['gql'] = {
 
     // Add any parameters if they exist.
     for (var i = 0; i < this.gqlParameters.length; i++) {
-      // TODO(bobbyluig): Handle parameter type checks.
-      this.appendValueInput('GQL_PARAMETER' + i)
+      // Create the parameter.
+      var parameter = this.appendValueInput('GQL_PARAMETER' + i)
         .appendField(this.gqlParameters[i].gqlName)
         .setAlign(Blockly.ALIGN_RIGHT)
         .setCheck(['String']);
-    }
 
-    // Default to inline inputs.
-    // this.setInputsInline(true);
+      // For fields that can be null, add a shadow block.
+      if (this.gqlParameters[i].gqlType.endsWith('!')) {
+        var nullArgument = this.workspace.newBlock('gql_null');
+        nullArgument.outputConnection.connect(parameter.connection);
+      }
+    }
 
     // The return type of the block is a string.
     this.setOutput(['String']);
@@ -522,17 +547,17 @@ Blockly.Blocks['gql'] = {
     var schema = Blockly.GraphQLBlock.schemas[this.gqlUrl];
 
     // Perform parent type existence check.
-    if (!schema.types.hasOwnProperty(this.gqlParentType)) {
-      console.log('The type "' + this.gqlParentType + '" no longer exists.');
+    if (!schema.types.hasOwnProperty(this.gqlParent)) {
+      console.log('The type "' + this.gqlParent + '" no longer exists.');
       return;
     }
 
     // Get the parent type.
-    var parentType = schema.types[this.gqlParentType];
+    var parentType = schema.types[this.gqlParent];
 
     // Perform field existence check.
     if (!parentType.fields.hasOwnProperty(this.gqlName)) {
-      console.log('The field "' + this.gqlName + '" no longer exists for the type "' + this.gqlParentType + '".');
+      console.log('The field "' + this.gqlName + '" no longer exists for the type "' + this.gqlParent + '".');
       return;
     }
 
@@ -541,10 +566,10 @@ Blockly.Blocks['gql'] = {
     var typeRef = Blockly.GraphQLBlock.traverseTypeRef(rootTypeRef);
 
     // Set the type name.
-    this.gqlType = typeRef.name;
+    this.gqlBaseType = typeRef.name;
 
     // Fetch the actual type object associated with this block's GraphQL type.
-    var type = schema.types[this.gqlType];
+    var type = schema.types[this.gqlBaseType];
 
     // Perform object/scalar type check.
     if (type.kind === 'OBJECT' && !this.gqlIsObject || type.kind === 'SCALAR' && this.gqlIsObject) {
@@ -557,7 +582,7 @@ Blockly.Blocks['gql'] = {
 
     // If we are an object, enable field autocompletion.
     if (this.gqlIsObject) {
-      var gqlFlydown = new Blockly.GqlFlydown(this.gqlName, this.gqlUrl, this.gqlType);
+      var gqlFlydown = new Blockly.GqlFlydown(this.gqlName, this.gqlUrl, this.gqlBaseType);
       titleInput.removeField('GQL_TITLE_FIELD');
       titleInput.appendField(gqlFlydown, 'GQL_TITLE_FIELD');
     }
@@ -575,9 +600,9 @@ Blockly.Blocks['gql'] = {
   }
 };
 
-Blockly.GqlFlydown = function(name, gqlUrl, gqlType) {
+Blockly.GqlFlydown = function(name, gqlUrl, gqlBaseType) {
   this.gqlUrl = gqlUrl;
-  this.gqlType = gqlType;
+  this.gqlBaseType = gqlBaseType;
 
   Blockly.GqlFlydown.superClass_.constructor.call(this, name, false, null);
 };
@@ -592,7 +617,7 @@ Blockly.GqlFlydown.prototype.flydownBlocksXML_ = function() {
   var xml = document.createElement('xml');
 
   // Get all blocks.
-  var blocks = Blockly.GraphQLBlock.buildTypeBlocks(this.gqlUrl, this.gqlType);
+  var blocks = Blockly.GraphQLBlock.buildTypeBlocks(this.gqlUrl, this.gqlBaseType);
 
   // Add all blocks to the root.
   for (var i = 0, block; block = blocks[i]; i++) {

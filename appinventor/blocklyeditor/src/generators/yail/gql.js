@@ -2,6 +2,11 @@
 
 goog.provide('Blockly.Yail.gql');
 
+// Code generator for the GraphQL null argument.
+Blockly.Yail['gql_null'] = function() {
+  return null;
+};
+
 // Code generator for GraphQL blocks.
 Blockly.Yail['gql'] = function() {
   // If the blocks is a scalar, then the code is just the field name.
