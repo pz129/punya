@@ -518,7 +518,7 @@ Blockly.Blocks['gql'] = {
         .setCheck(['String']);
 
       // For fields that can be null, add a shadow block.
-      if (this.gqlParameters[i].gqlType.endsWith('!')) {
+      if (!this.gqlParameters[i].gqlType.endsWith('!')) {
         var nullArgument = this.workspace.newBlock('gql_null');
         nullArgument.outputConnection.connect(parameter.connection);
       }

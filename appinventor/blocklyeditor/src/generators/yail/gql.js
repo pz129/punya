@@ -4,7 +4,7 @@ goog.provide('Blockly.Yail.gql');
 
 // Code generator for the GraphQL null argument.
 Blockly.Yail['gql_null'] = function() {
-  return null;
+  return ['', Blockly.Yail.ORDER_ATOMIC];
 };
 
 // Code generator for GraphQL blocks.
