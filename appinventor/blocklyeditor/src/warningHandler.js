@@ -625,7 +625,7 @@ Blockly.WarningHandler.prototype['checkGql'] = function(block) {
     var parentTypeRef = schema.types[parentBlock.gqlBaseType];
 
     // Get the parent type name and possible types.
-    var allPossibleTypes = parentTypeRef.possibleTypes || [];
+    var allPossibleTypes = (parentTypeRef.possibleTypes || []).slice(0);
     allPossibleTypes.push(parentTypeRef);
 
     // Locate valid type.
