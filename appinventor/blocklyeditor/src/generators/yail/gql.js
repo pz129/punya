@@ -10,7 +10,7 @@ Blockly.Yail['gql_null'] = function() {
 // Code generator for GraphQL blocks.
 Blockly.Yail['gql'] = function() {
   // If the blocks is a scalar, then the code is just the field name.
-  if (!this.gqlIsObject) {
+  if (!this.gqlHasFields) {
     return [Blockly.Yail.quote_(this.gqlName), Blockly.Yail.ORDER_ATOMIC];
   }
 
@@ -20,8 +20,9 @@ Blockly.Yail['gql'] = function() {
   // The first item in the list is the list constructor, which is not part of the query string.
   combination.push(Blockly.Yail.YAIL_LIST_CONSTRUCTOR);
 
-  // The field name is the first query element.
-  combination.push(Blockly.Yail.quote_(this.gqlName));
+  // The field name (or fragment) is the first query element.
+  var nameWithPrefix = (this.gqlParent === null) ? '... on ' + this.gqlName : this.gqlName;
+  combination.push(Blockly.Yail.quote_(nameWithPrefix));
 
   // If there are parameters, add them.
   if (this.gqlParameters.length > 0) {

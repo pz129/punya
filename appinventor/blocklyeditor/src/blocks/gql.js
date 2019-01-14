@@ -14,6 +14,9 @@ Blockly.GraphQLBlock = {};
 Blockly.GraphQLBlock.PRIMARY_COLOR = '#e535ab';
 Blockly.GraphQLBlock.SECONDARY_COLOR = '#161e26';
 
+// Constant for special internal root type. Must not be valid GraphQL name.
+Blockly.GraphQLBlock.ROOT_TYPE = '[root]';
+
 // GraphQL introspection query.
 // <editor-fold desc="INTROSPECTION_QUERY">
 Blockly.GraphQLBlock.INTROSPECTION_QUERY =
@@ -149,7 +152,7 @@ Blockly.GraphQLBlock.instanceBlocks = function(uid) {
   }
 
   // Add all blocks of the root.
-  Array.prototype.push.apply(blocks, Blockly.GraphQLBlock.buildTypeBlocks(endpoint, ''));
+  Array.prototype.push.apply(blocks, Blockly.GraphQLBlock.buildTypeBlocks(endpoint, Blockly.GraphQLBlock.ROOT_TYPE));
 
   // Return the list of blocks.
   return blocks;
@@ -185,7 +188,7 @@ Blockly.GraphQLBlock.typeString = function(typeRef) {
 };
 
 // Creates a list of block elements from a given type.
-  Blockly.GraphQLBlock.buildTypeBlocks = function(gqlUrl, gqlBaseType) {
+Blockly.GraphQLBlock.buildTypeBlocks = function(gqlUrl, gqlBaseType) {
   // Fetch the associated type.
   var schema = Blockly.GraphQLBlock.schemas[gqlUrl];
   var type = schema.types[gqlBaseType];
@@ -216,8 +219,8 @@ Blockly.GraphQLBlock.typeString = function(typeRef) {
     mutation.setAttribute('gql_name', fieldName);
     block.appendChild(mutation);
 
-    // If the field is an object, set its fields to 1.
-    if (fieldTypeRef.kind === 'OBJECT') {
+    // If the field is an object, interface, or union, then it can have fields of its own.
+    if (fieldTypeRef.kind === 'OBJECT' || fieldTypeRef.kind === 'INTERFACE' || fieldTypeRef.kind === 'UNION') {
       mutation.setAttribute('gql_fields', '1');
     }
 
@@ -235,6 +238,27 @@ Blockly.GraphQLBlock.typeString = function(typeRef) {
       // Add parameter to mutation.
       mutation.appendChild(gqlParameter);
     }
+  }
+
+  // Get all possible types.
+  var possibleTypes = type.possibleTypes || [];
+
+  // Build fragments on possible types.
+  for (var i = 0, possibleType; possibleType = possibleTypes[i]; i++) {
+    // Create a new block.
+    var block = document.createElement('block');
+    block.setAttribute('type', 'gql');
+    blocks.push(block);
+
+    // Get the base type.
+    var baseType = Blockly.GraphQLBlock.traverseTypeRef(possibleType);
+
+    // Create a new mutation.
+    var mutation = document.createElement('mutation');
+    mutation.setAttribute('gql_url', gqlUrl);
+    mutation.setAttribute('gql_name', baseType.name);
+    mutation.setAttribute('gql_fields', '1');
+    block.appendChild(mutation);
   }
 
   // Return the block elements.
@@ -284,7 +308,6 @@ Blockly.GraphQLBlock.updateSchema = function(endpoint) {
     for (var i = 0, type; type = schema.types[i]; i++) {
       // Extract the type name as the key.
       var typeName = type['name'];
-      delete type['name'];
 
       // Set the modified type object under the type name.
       newTypes[typeName] = type;
@@ -298,7 +321,6 @@ Blockly.GraphQLBlock.updateSchema = function(endpoint) {
         for (var j = 0, field; field = type.fields[j]; j++) {
           // Extract the field name as the key.
           var fieldName = field['name'];
-          delete field['name'];
 
           // Set the modified field object under the field name.
           newFields[fieldName] = field;
@@ -309,14 +331,20 @@ Blockly.GraphQLBlock.updateSchema = function(endpoint) {
       type['fields'] = newFields;
     }
 
-    // Add the special schema root type.
-    newTypes[''] = {
-      'fields': {}
+    // Get all possible object and interface types for fragment block generation.
+    var possibleTypes = goog.array.filter(schema['types'], function(type) {
+      return (type.kind === 'OBJECT' || type.kind === 'INTERFACE') && !type.name.startsWith('__');
+    });
+
+    // Add the special schema root type, which contains the root fields and all possible types
+    newTypes[Blockly.GraphQLBlock.ROOT_TYPE] = {
+      'fields': {},
+      'possibleTypes': possibleTypes
     };
 
     // If there is a query type, add it to the root fields.
     if (schema['queryType'] !== null) {
-      newTypes['']['fields']['query'] = {
+      newTypes[Blockly.GraphQLBlock.ROOT_TYPE]['fields']['query'] = {
         'args': [],
         'description': 'A GraphQL query.',
         'type': {
@@ -328,7 +356,7 @@ Blockly.GraphQLBlock.updateSchema = function(endpoint) {
 
     // If there is a mutation type, add it to the root fields.
     if (schema['mutationType'] !== null) {
-      newTypes['']['fields']['mutation'] = {
+      newTypes[Blockly.GraphQLBlock.ROOT_TYPE]['fields']['mutation'] = {
         'args': [],
         'description': 'A GraphQL mutation.',
         'type': {
@@ -420,10 +448,14 @@ Blockly.Blocks['gql'] = {
     // Set basic attributes for this block shared by all GraphQL blocks.
     mutation.setAttribute('gql_url', this.gqlUrl);
     mutation.setAttribute('gql_name', this.gqlName);
-    mutation.setAttribute('gql_parent', this.gqlParent);
 
-    // If this block is not a scalar, store its field count.
-    if (this.gqlIsObject) {
+    // Only non-fragments have parents.
+    if (this.gqlParent !== null) {
+      mutation.setAttribute('gql_parent', this.gqlParent);
+    }
+
+    // If this block has fields, store its field count.
+    if (this.gqlHasFields) {
       mutation.setAttribute('gql_fields', this.itemCount_);
     }
 
@@ -446,10 +478,10 @@ Blockly.Blocks['gql'] = {
     // Extract basic mutation attributes shared by all GraphQL blocks.
     this.gqlUrl = xmlElement.getAttribute('gql_url');
     this.gqlName = xmlElement.getAttribute('gql_name');
-    this.gqlParent = xmlElement.getAttribute('gql_parent');
+    this.gqlParent = xmlElement.getAttribute('gql_parent') || null;
 
     // Determine whether the block is an object or a scalar.
-    this.gqlIsObject = xmlElement.hasAttribute('gql_fields');
+    this.gqlHasFields = xmlElement.hasAttribute('gql_fields');
 
     // Get any parameters for this GraphQL block.
     var gqlParameterElements = xmlElement.getElementsByTagName('gql_parameter');
@@ -467,7 +499,15 @@ Blockly.Blocks['gql'] = {
     this.setColour(Blockly.GraphQLBlock.PRIMARY_COLOR);
 
     // Add the title row.
-    this.appendDummyInput('GQL_TITLE').appendField(this.gqlName, 'GQL_TITLE_FIELD');
+    var title = this.appendDummyInput('GQL_TITLE');
+
+    // For fragments, add prefix.
+    if (this.gqlParent === null) {
+      title.appendField('... on');
+    }
+
+    // Add title field.
+    title.appendField(this.gqlName, 'GQL_TITLE_FIELD');
 
     // Add any parameters if they exist.
     for (var i = 0; i < this.gqlParameters.length; i++) {
@@ -488,7 +528,7 @@ Blockly.Blocks['gql'] = {
     this.setOutput(['String']);
 
     // For non-scalar blocks, users should be able add and remove fields.
-    if (this.gqlIsObject) {
+    if (this.gqlHasFields) {
       // Initialize required mutator parameters.
       this.emptyInputName = null;
       this.repeatingInputName = 'GQL_FIELD';
@@ -546,34 +586,49 @@ Blockly.Blocks['gql'] = {
     // Fetch the schema.
     var schema = Blockly.GraphQLBlock.schemas[this.gqlUrl];
 
-    // Perform parent type existence check.
-    if (!schema.types.hasOwnProperty(this.gqlParent)) {
-      console.log('The type "' + this.gqlParent + '" no longer exists.');
-      return;
+    // Get the base type for fragments.
+    if (this.gqlParent === null) {
+      // Perform type existence check on fragments.
+      if (!schema.types.hasOwnProperty(this.gqlName)) {
+        console.log('The fragment base type "' + this.gqlName + '" no longer exists.');
+        return;
+      }
+
+      // The base type is the name.
+      this.gqlBaseType = this.gqlName;
     }
 
-    // Get the parent type.
-    var parentType = schema.types[this.gqlParent];
+    // Get the base type for non-fragments.
+    else {
+      // Perform parent type existence check on non-fragments.
+      if (this.gqlParent !== null && !schema.types.hasOwnProperty(this.gqlParent)) {
+        console.log('The parent base type "' + this.gqlParent + '" no longer exists.');
+        return;
+      }
 
-    // Perform field existence check.
-    if (!parentType.fields.hasOwnProperty(this.gqlName)) {
-      console.log('The field "' + this.gqlName + '" no longer exists for the type "' + this.gqlParent + '".');
-      return;
+      // Get the parent type.
+      var parentType = schema.types[this.gqlParent];
+
+      // Perform field existence check.
+      if (!parentType.fields.hasOwnProperty(this.gqlName)) {
+        console.log('The field "' + this.gqlName + '" no longer exists for the type "' + this.gqlParent + '".');
+        return;
+      }
+
+      // Get own type reference, which must exist relative to parent assuming that the schema is well-formed.
+      var rootTypeRef = parentType.fields[this.gqlName].type;
+      var typeRef = Blockly.GraphQLBlock.traverseTypeRef(rootTypeRef);
+
+      // Set the type name.
+      this.gqlBaseType = typeRef.name;
     }
-
-    // Get own type reference, which must exist relative to parent assuming that the schema is well-formed.
-    var rootTypeRef = parentType.fields[this.gqlName].type;
-    var typeRef = Blockly.GraphQLBlock.traverseTypeRef(rootTypeRef);
-
-    // Set the type name.
-    this.gqlBaseType = typeRef.name;
 
     // Fetch the actual type object associated with this block's GraphQL type.
     var type = schema.types[this.gqlBaseType];
 
-    // Perform object/scalar type check.
-    if (type.kind === 'OBJECT' && !this.gqlIsObject || type.kind === 'SCALAR' && this.gqlIsObject) {
-      console.log('Scalar/object mismatch.');
+    // Perform field existence type check.
+    if (type.kind === 'OBJECT' && !this.gqlHasFields || type.kind === 'SCALAR' && this.gqlHasFields) {
+      console.log('Field existence mismatch.');
       return;
     }
 
@@ -581,18 +636,26 @@ Blockly.Blocks['gql'] = {
     var titleInput = this.getInput('GQL_TITLE');
 
     // If we are an object, enable field autocompletion.
-    if (this.gqlIsObject) {
+    if (this.gqlHasFields) {
       var gqlFlydown = new Blockly.GqlFlydown(this.gqlName, this.gqlUrl, this.gqlBaseType);
       titleInput.removeField('GQL_TITLE_FIELD');
       titleInput.appendField(gqlFlydown, 'GQL_TITLE_FIELD');
     }
 
-    // Fetch the description from the parent type information.
-    var description = parentType.fields[this.gqlName].description;
+    // Get the description for fragments.
+    if (this.gqlParent === null) {
+      // TODO(bobbyluig)
+    }
 
-    // Update description if available.
-    if (description !== null) {
-      this.setTooltip(description);
+    // Get the description for non-fragments.
+    else {
+      // Fetch the description from the parent type information.
+      var description = parentType.fields[this.gqlName].description;
+
+      // Update description if available.
+      if (description !== null) {
+        this.setTooltip(description);
+      }
     }
 
     // Perform error and warning checking.
