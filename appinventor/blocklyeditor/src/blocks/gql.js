@@ -100,11 +100,97 @@ Blockly.GraphQLBlock.instances = {};
 // GraphQL introspection query cache.
 Blockly.GraphQLBlock.schemas = {};
 
+// Check for type compatibility.
+Blockly.GraphQLBlock.checkType = function(childConnection, parentConnection) {
+  // Get the child and parent source blocks.
+  var childBlock = childConnection.sourceBlock_;
+  var parentBlock = parentConnection.sourceBlock_;
+
+  // Degrade to a normal type check for parent blocks that do not require special validation.
+  if (parentBlock.typeName !== 'GraphQL' && parentBlock.type !== 'gql') {
+    return parentConnection.check_.indexOf('String') !== -1;
+  }
+
+  // If the parent block is the query method, perform root and endpoint checking.
+  if (parentBlock.typeName === 'GraphQL') {
+    // Fetch the endpoint of the instance block.
+    var uid = childBlock.workspace.componentDb_.getUidForName(parentBlock.instanceName);
+    var endpoint = Blockly.GraphQLBlock.instances[uid];
+
+    // Determine if the endpoints match.
+    if (endpoint !== childBlock.gqlUrl) {
+      return false;
+    }
+
+    // Fetch the schema for the endpoint.
+    var schema = Blockly.GraphQLBlock.schemas[endpoint];
+
+    // Only perform root checking for updated schemas.
+    if (schema === undefined) {
+      return true;
+    }
+
+    // Determine if the block is a valid root field.
+    if (!schema.types[Blockly.GraphQLBlock.ROOT_TYPE].fields.hasOwnProperty(childBlock.gqlName)) {
+      return false;
+    }
+
+    // All checks passed.
+    return true;
+  }
+
+  // Check endpoint compatibility.
+  if (childBlock.gqlUrl !== parentBlock.gqlUrl) {
+    return false;
+  }
+
+  // Object type checking is only valid on blocks with an updated schema.
+  if (childBlock.gqlBaseType === undefined || parentBlock.gqlBaseType === undefined) {
+    return true;
+  }
+
+  // Fetch the schema.
+  var schema = Blockly.GraphQLBlock.schemas[childBlock.gqlUrl];
+
+  // Perform checking on fragments.
+  if (childBlock.gqlParent === null) {
+    // Get the parent type reference.
+    var parentTypeRef = schema.types[parentBlock.gqlBaseType];
+
+    // Get the parent type name and possible types.
+    var allPossibleTypes = (parentTypeRef.possibleTypes || []).slice(0);
+    allPossibleTypes.push(parentTypeRef);
+
+    // Locate valid type.
+    var validType = goog.array.find(allPossibleTypes, function(type) {
+      return Blockly.GraphQLBlock.traverseTypeRef(type).name === childBlock.gqlBaseType;
+    });
+
+    // Check for type validity.
+    if (!validType) {
+      return false;
+    }
+  }
+
+  // Perform checking on non-fragments.
+  else {
+    // Fetch the parent type, which must exist.
+    var parentType = schema.types[childBlock.gqlParent];
+
+    // Check for field validity.
+    if (childBlock.gqlParent !== parentBlock.gqlBaseType || !parentType.fields.hasOwnProperty(childBlock.gqlName)) {
+      return false;
+    }
+  }
+
+  // All checks passed.
+  return true;
+};
+
 // Register an instance with an endpoint.
 Blockly.GraphQLBlock.registerInstance = function(uid, endpointUrl) {
   // Add instance.
   Blockly.GraphQLBlock.instances[uid] = endpointUrl;
-  console.log('registering', uid);
 
   // Update (or fetch) the schema for the associated endpoint
   Blockly.GraphQLBlock.updateSchema(endpointUrl);
@@ -114,7 +200,6 @@ Blockly.GraphQLBlock.registerInstance = function(uid, endpointUrl) {
 Blockly.GraphQLBlock.unregisterInstance = function(uid) {
   // Get the endpoint associated with the instance.
   var endpointUrl = Blockly.GraphQLBlock.instances[uid];
-  console.log('unregistering', uid);
 
   // If the instance is not registered, we are done.
   if (endpointUrl === undefined) {
@@ -375,12 +460,13 @@ Blockly.GraphQLBlock.updateSchema = function(endpoint) {
     Blockly.GraphQLBlock.schemas[endpoint] = schema;
 
     // Fetch all blocks from the current workspace.
+    // TODO(bobbyluig): The main workspace might not be ready yet.
     var allBlocks = Blockly.mainWorkspace.getAllBlocks();
 
     // Go through blocks.
     for (var i = 0, block; block = allBlocks[i]; i++) {
-      // Filter by GraphQL blocks with the matching endpoint.
-      if (block.type === 'gql' && block.gqlUrl === endpoint) {
+      // Filter by GraphQL blocks.
+      if (block.type === 'gql') {
         // Inform the block that it should update its own schema.
         block.updateSchema();
       }
@@ -539,7 +625,7 @@ Blockly.Blocks['gql'] = {
     }
 
     // The return type of the block is a string.
-    this.setOutput(['String']);
+    this.setOutput(true, ['String']);
 
     // For non-scalar blocks, users should be able add and remove fields.
     if (this.gqlHasFields) {
@@ -561,8 +647,6 @@ Blockly.Blocks['gql'] = {
     this.updateSchema();
   },
 
-  warnings: [{name: 'checkGql'}],
-
   updateContainerBlock: function(containerBlock) {
     containerBlock.setFieldValue('object', 'CONTAINER_TEXT');
     containerBlock.setTooltip('Add, remove, or reorder fields to reconfigure this GraphQL block.');
@@ -578,7 +662,7 @@ Blockly.Blocks['gql'] = {
   addEmptyInput: function() {
   },
   addInput: function(inputNumber) {
-    return this.appendIndentedValueInput(this.repeatingInputName + inputNumber);
+    return this.appendIndentedValueInput(this.repeatingInputName + inputNumber).setCheck(['String']);
   },
 
   onchange: function(e) {
@@ -651,9 +735,16 @@ Blockly.Blocks['gql'] = {
 
     // If we are an object, enable field autocompletion.
     if (this.gqlHasFields) {
-      var gqlFlydown = new Blockly.GqlFlydown(this.gqlName, this.gqlUrl, this.gqlBaseType);
+      // Remove the old title field and replace it with a flydown field.
+      var flydown = new Blockly.GqlFlydown(this.gqlName, this.gqlUrl, this.gqlBaseType);
       titleInput.removeField('GQL_TITLE_FIELD');
-      titleInput.appendField(gqlFlydown, 'GQL_TITLE_FIELD');
+      titleInput.appendField(flydown, 'GQL_TITLE_FIELD');
+
+      // In order to correctly compute the width of the flydown, this block needs to be rendered when the workspace is
+      // shown the next time.
+      if (this.rendered) {
+        this.workspace.blocksNeedingRendering.push(this);
+      }
     }
 
     // Get the description for fragments.
@@ -672,8 +763,8 @@ Blockly.Blocks['gql'] = {
       }
     }
 
-    // Perform error and warning checking.
-    this.workspace.getWarningHandler() && this.workspace.getWarningHandler().checkErrors(this);
+    // Set the output to allow for enhanced type checking.
+    this.setOutput(true, [Blockly.GraphQLBlock.checkType]);
   }
 };
 
