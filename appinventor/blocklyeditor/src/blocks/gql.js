@@ -104,6 +104,7 @@ Blockly.GraphQLBlock.schemas = {};
 Blockly.GraphQLBlock.registerInstance = function(uid, endpointUrl) {
   // Add instance.
   Blockly.GraphQLBlock.instances[uid] = endpointUrl;
+  console.log('registering', uid);
 
   // Update (or fetch) the schema for the associated endpoint
   Blockly.GraphQLBlock.updateSchema(endpointUrl);
@@ -113,6 +114,7 @@ Blockly.GraphQLBlock.registerInstance = function(uid, endpointUrl) {
 Blockly.GraphQLBlock.unregisterInstance = function(uid) {
   // Get the endpoint associated with the instance.
   var endpointUrl = Blockly.GraphQLBlock.instances[uid];
+  console.log('unregistering', uid);
 
   // If the instance is not registered, we are done.
   if (endpointUrl === undefined) {
@@ -439,6 +441,18 @@ Blockly.Blocks['gql'] = {
   gqlTypeToBlocklyType: function(gqlType) {
     var yailType = this.gqlTypeToYailType(gqlType);
     return Blockly.Blocks.Utilities.YailTypeToBlocklyType(yailType, Blockly.Blocks.Utilities.INPUT);
+  },
+
+  helpUrl: function() {
+    var prefix = 'https://graphql-docs.com/docs/';
+
+    if (this.gqlParent === null) {
+      prefix += this.gqlName + '/';
+    } else if (this.gqlParent !== Blockly.GraphQLBlock.ROOT_TYPE) {
+      prefix += this.gqlParent + '/';
+    }
+
+    return prefix + '?graphqlUrl=' + this.gqlUrl;
   },
 
   mutationToDom: function() {

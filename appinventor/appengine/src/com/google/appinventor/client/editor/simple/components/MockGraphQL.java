@@ -1,13 +1,7 @@
 package com.google.appinventor.client.editor.simple.components;
 
-import com.google.appinventor.client.Ode;
-import com.google.appinventor.client.editor.simple.SimpleComponentDatabase;
 import com.google.appinventor.client.editor.simple.SimpleEditor;
-import com.google.appinventor.client.editor.youngandroid.YaBlocksEditor;
-import com.google.appinventor.client.properties.json.ClientJsonParser;
-import com.google.appinventor.shared.simple.ComponentDatabaseInterface;
 import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.Widget;
 
 public class MockGraphQL extends MockNonVisibleComponent {
 
