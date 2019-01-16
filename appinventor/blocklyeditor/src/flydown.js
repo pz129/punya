@@ -218,6 +218,13 @@ Blockly.Flydown.prototype.reflow = function() {
         block.moveBy(dx, 0);
         blockXY.x += dx;
       }
+      if (block.flyoutRect_) {
+        var tab = block.outputConnection ? Blockly.BlockSvg.TAB_WIDTH : 0;
+        block.flyoutRect_.setAttribute('width', blockHW.width);
+        block.flyoutRect_.setAttribute('height', blockHW.height);
+        block.flyoutRect_.setAttribute('x', this.RTL ? blockXY.x - blockHW.width + tab : blockXY.x - tab);
+        block.flyoutRect_.setAttribute('y', blockXY.y);
+      }
     }
     // Record the width for us in showAt method
     this.width_ = flydownWidth;
