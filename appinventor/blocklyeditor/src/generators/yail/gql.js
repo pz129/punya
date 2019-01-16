@@ -14,6 +14,11 @@ Blockly.Yail['gql'] = function() {
     return [Blockly.Yail.quote_(this.gqlName), Blockly.Yail.ORDER_ATOMIC];
   }
 
+  // If the block is not a scalar but does not have fields, there is no code to generate.
+  if (this.itemCount_ === 0) {
+    return ['', Blockly.Yail.ORDER_ATOMIC];
+  }
+
   // Keep track of an array of items to concatenate.
   var combination = [];
 
@@ -40,6 +45,7 @@ Blockly.Yail['gql'] = function() {
 
     // Add parameter names and arguments.
     for (var i = 0; i < args.length; i++) {
+      // Add the parameter name.
       combination.push(Blockly.Yail.quote_(this.gqlParameters[i].gqlName + ': '));
 
       // Get type type of the argument.
@@ -67,22 +73,22 @@ Blockly.Yail['gql'] = function() {
   }
 
   // Add opening bracket.
-  combination.push('" {\n"');
+  combination.push('" {"');
 
   // Add all object fields.
   for (var i = 0; i < this.itemCount_; i++) {
+    // Recursively generate code for the field.
     var objectField = Blockly.Yail.valueToCode(this, 'GQL_FIELD' + i, Blockly.Yail.ORDER_NONE);
 
     // Only add the field if it is non-empty.
     if (objectField) {
-      combination.push('"  "');
+      combination.push('" "');
       combination.push(objectField);
-      combination.push('"\n"');
     }
   }
 
   // Add closing bracket.
-  combination.push('"}\n"');
+  combination.push('" }"');
 
   // Begin generating string concatenation code.
   var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + 'string-append' + Blockly.Yail.YAIL_SPACER;
