@@ -460,7 +460,7 @@ Blockly.GraphQLBlock.updateSchema = function(endpoint) {
     Blockly.GraphQLBlock.schemas[endpoint] = schema;
 
     // Fetch all blocks from the current workspace.
-    // TODO(bobbyluig): The main workspace might not be ready yet.
+    // TODO(bobbyluig): The main workspace might
     var allBlocks = Blockly.mainWorkspace.getAllBlocks();
 
     // Go through blocks.

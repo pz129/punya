@@ -175,6 +175,7 @@ Blockly.Flydown.prototype.showAt = function(x, y) {
  */
 Blockly.Flydown.prototype.onMouseOver_ = function(e) {
   this.workspace_.markFocused();
+  e.stopPropagation();
 };
 
 /**
@@ -184,6 +185,7 @@ Blockly.Flydown.prototype.onMouseOver_ = function(e) {
  */
 Blockly.Flydown.prototype.onMouseOut_ = function(e) {
   this.targetWorkspace_.markFocused();
+  e.stopPropagation();
 };
 
 /**
