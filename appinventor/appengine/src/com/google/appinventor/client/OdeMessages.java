@@ -7130,6 +7130,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String GqlEndpointUrlProperties();
 
+  @DefaultMessage("HttpHeaders")
+  @Description("")
+  String GqlHttpHeadersProperties();
+
   @DefaultMessage("Query")
   @Description("")
   String GqlQueryMethods();

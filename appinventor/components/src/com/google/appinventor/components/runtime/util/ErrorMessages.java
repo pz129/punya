@@ -245,7 +245,11 @@ public final class ErrorMessages {
   // Phone Call Errors
   public static final int ERROR_NO_CALL_PERMISSION = 3501;
 
-  // Start the next group of errors at 3600
+  // GraphQL errors
+  public static final int ERROR_GQL_INVALID_HTTP_HEADERS = 3601;
+  public static final int ERROR_GQL_UNABLE_TO_POST = 3602;
+
+  // Start the next group of errors at 3700
 
   // Mapping of error numbers to error message format strings.
   private static final Map<Integer, String> errorMessages;
@@ -614,6 +618,12 @@ public final class ErrorMessages {
     // Phone Call errors
     errorMessages.put(ERROR_NO_CALL_PERMISSION,
         "You do not have permission to make phone calls.");
+
+    // GraphQL errors
+    errorMessages.put(ERROR_GQL_INVALID_HTTP_HEADERS,
+        "Invalid HTTP header format. Must be a JSON string of name and value(s).");
+    errorMessages.put(ERROR_GQL_UNABLE_TO_POST,
+        "Unable to POST query. Got exception %s");
   }
 
   private ErrorMessages() {

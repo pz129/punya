@@ -6,7 +6,8 @@ import com.google.gwt.user.client.ui.Image;
 public class MockGraphQL extends MockNonVisibleComponent {
 
   public static final String TYPE = "GraphQL";
-  private static final String PROPERTY_NAME_GQL_ENDPOINT_URL = "GqlEndpointUrl";
+  private static final String PROPERTY_GQL_ENDPOINT_URL = "GqlEndpointUrl";
+  private static final String PROPERTY_GQL_HTTP_HEADERS = "GqlHttpHeaders";
 
   /**
    * Creates a new instance of a non-visible component whose icon is loaded dynamically (not part of the icon image
@@ -21,7 +22,7 @@ public class MockGraphQL extends MockNonVisibleComponent {
     super.onComponentCreated();
 
     // Update schema.
-    onPropertyChange(PROPERTY_NAME_GQL_ENDPOINT_URL, getPropertyValue(PROPERTY_NAME_GQL_ENDPOINT_URL));
+    onPropertyChange(PROPERTY_GQL_ENDPOINT_URL, getPropertyValue(PROPERTY_GQL_ENDPOINT_URL));
   }
 
   @Override
@@ -29,8 +30,13 @@ public class MockGraphQL extends MockNonVisibleComponent {
     super.onPropertyChange(propertyName, newValue);
 
     // If the property change was the endpoint, update the schema.
-    if (PROPERTY_NAME_GQL_ENDPOINT_URL.equals(propertyName) && !newValue.isEmpty()) {
-      register(newValue);
+    if (PROPERTY_GQL_ENDPOINT_URL.equals(propertyName) && !newValue.isEmpty()) {
+      register(newValue, getPropertyValue(PROPERTY_GQL_HTTP_HEADERS));
+    }
+
+    // If the property change was the headers, update the schema.
+    if (PROPERTY_GQL_HTTP_HEADERS.equals(propertyName) && !getPropertyValue(PROPERTY_GQL_ENDPOINT_URL).isEmpty()) {
+      register(getPropertyValue(PROPERTY_GQL_ENDPOINT_URL), newValue);
     }
   }
 
@@ -43,10 +49,11 @@ public class MockGraphQL extends MockNonVisibleComponent {
    * Registers this instance with a given endpoint.
    *
    * @param url the endpoint to use.
+   * @param headers the headers to use.
    */
-  private native void register(String url) /*-{
+  private native void register(String url, String headers) /*-{
     var uid = this.@com.google.appinventor.client.editor.simple.components.MockGraphQL::getUuid()();
-    Blockly.GraphQLBlock.registerInstance(uid, url);
+    Blockly.GraphQLBlock.registerInstance(uid, url, headers);
   }-*/;
 
   /**

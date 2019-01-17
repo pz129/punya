@@ -4,7 +4,6 @@ goog.provide('AI.Blockly.Blocks.gql');
 goog.provide('AI.Blockly.GraphQL');
 goog.require('AI.Blockly.FieldFlydown');
 goog.require('Blockly.Blocks.Utilities');
-goog.require('goog.net.XhrIo');
 
 // Initialize namespace.
 Blockly.Blocks.gql = {};
@@ -188,12 +187,12 @@ Blockly.GraphQLBlock.checkType = function(childConnection, parentConnection) {
 };
 
 // Register an instance with an endpoint.
-Blockly.GraphQLBlock.registerInstance = function(uid, endpointUrl) {
+Blockly.GraphQLBlock.registerInstance = function(uid, endpointUrl, httpHeaders) {
   // Add instance.
   Blockly.GraphQLBlock.instances[uid] = endpointUrl;
 
   // Update (or fetch) the schema for the associated endpoint
-  Blockly.GraphQLBlock.updateSchema(endpointUrl);
+  Blockly.GraphQLBlock.updateSchema(endpointUrl, httpHeaders);
 };
 
 // Unregister an instance.
@@ -284,7 +283,12 @@ Blockly.GraphQLBlock.buildTypeBlocks = function(gqlUrl, gqlBaseType) {
   var blocks = [];
 
   // Get all fields for the type.
-  var allFields = Object.keys(type.fields);
+  var allFields = [];
+  for (var field in type.fields) {
+    if (type.fields.hasOwnProperty(field)) {
+      allFields.push(field);
+    }
+  }
 
   // Go through all fields for the type.
   for (var i = 0, fieldName; fieldName = allFields[i]; i++) {
@@ -353,125 +357,159 @@ Blockly.GraphQLBlock.buildTypeBlocks = function(gqlUrl, gqlBaseType) {
 };
 
 // Method to update cached introspection query and associated blocks.
-Blockly.GraphQLBlock.updateSchema = function(endpoint) {
+Blockly.GraphQLBlock.updateSchema = function(endpoint, headers) {
   // Build post data.
   var data = {
     'query': Blockly.GraphQLBlock.INTROSPECTION_QUERY,
     'operationName': 'IntrospectionQuery'
   };
 
-  // Create headers.
-  var headers = {
-    'content-type': 'application/json'
+  // Parse headers.
+  var headers = (!!headers) ? JSON.parse(headers) : {};
+
+  // Set content type.
+  headers['content-type'] = 'application/json; charset=utf-8';
+
+  // Create a new request object.
+  var xhr = new XMLHttpRequest();
+
+  // Response handler.
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      // Check if there were any errors sending the requests.
+      if (xhr.status !== 200) {
+        console.log('Introspection query for ' + endpoint + ' failed with error code ' + xhr.status + '.');
+        return;
+      }
+
+      // Get the response, which is in JSON format.
+      var response = JSON.parse(xhr.responseText);
+
+      // Check if there were any errors.
+      if (response.hasOwnProperty('errors')) {
+        console.log('Introspection query for ' + endpoint + ' failed with GraphQL errors.', response['errors']);
+        return;
+      }
+
+      // Fetch the raw schema.
+      var schema = response['data']['__schema'];
+
+      // Create a type mapping for fast name lookup.
+      var newTypes = {};
+
+      // Modify the old type objects and add them to new types.
+      for (var i = 0, type; type = schema.types[i]; i++) {
+        // Extract the type name as the key.
+        var typeName = type['name'];
+
+        // Set the modified type object under the type name.
+        newTypes[typeName] = type;
+
+        // Create a field mapping for fast name lookup.
+        var newFields = {};
+
+        // Determine if there are any fields.
+        if (type['fields'] !== null) {
+          // Modify the old field objects and add them to new fields.
+          for (var j = 0, field; field = type.fields[j]; j++) {
+            // Extract the field name as the key.
+            var fieldName = field['name'];
+
+            // Set the modified field object under the field name.
+            newFields[fieldName] = field;
+          }
+        }
+
+        // Add the __typename field.
+        newFields['__typename'] = {
+          'name': '___typename',
+          'description': null,
+          'args': [],
+          'type': {
+            'kind': 'NON_NULL',
+            'name': null,
+            'ofType': {
+              'kind': 'SCALAR',
+              'name': 'String',
+              'ofType': null
+            }
+          },
+          'isDeprecated': false,
+          'deprecationReason': null
+        };
+
+        // Replace the old fields with the new fields.
+        type['fields'] = newFields;
+      }
+
+      // Get all possible object and interface types for fragment block generation.
+      var possibleTypes = goog.array.filter(schema['types'], function(type) {
+        return (type.kind === 'OBJECT' || type.kind === 'INTERFACE') && !type.name.startsWith('__');
+      });
+
+      // Add the special schema root type, which contains the root fields and all possible types
+      newTypes[Blockly.GraphQLBlock.ROOT_TYPE] = {
+        'fields': {},
+        'possibleTypes': possibleTypes
+      };
+
+      // If there is a query type, add it to the root fields.
+      if (schema['queryType'] !== null) {
+        newTypes[Blockly.GraphQLBlock.ROOT_TYPE]['fields']['query'] = {
+          'args': [],
+          'description': 'A GraphQL query.',
+          'type': {
+            'kind': 'OBJECT',
+            'name': schema['queryType']['name']
+          }
+        };
+      }
+
+      // If there is a mutation type, add it to the root fields.
+      if (schema['mutationType'] !== null) {
+        newTypes[Blockly.GraphQLBlock.ROOT_TYPE]['fields']['mutation'] = {
+          'args': [],
+          'description': 'A GraphQL mutation.',
+          'type': {
+            'kind': 'OBJECT',
+            'name': schema['mutationType']['name']
+          }
+        };
+      }
+
+      // Replace the old types with the new types.
+      schema['types'] = newTypes;
+
+      // Store the modified schema in cache.
+      Blockly.GraphQLBlock.schemas[endpoint] = schema;
+
+      // Fetch all blocks from the current workspace.
+      // TODO(bobbyluig): The main workspace might
+      var allBlocks = Blockly.mainWorkspace.getAllBlocks();
+
+      // Go through blocks.
+      for (var i = 0, block; block = allBlocks[i]; i++) {
+        // Filter by GraphQL blocks.
+        if (block.type === 'gql') {
+          // Inform the block that it should update its own schema.
+          block.updateSchema();
+        }
+      }
+    }
   };
 
   // Send an introspection query.
-  goog.net.XhrIo.send(endpoint, function(e) {
-    // Get the XHR.
-    var xhr = e.target;
+  xhr.open('POST', endpoint);
 
-    // Check if there were any errors sending the requests.
-    if (xhr.getLastErrorCode() !== goog.net.ErrorCode.NO_ERROR) {
-      console.log('Introspection query for ' + endpoint + ' failed with error code ' + xhr.getLastErrorCode() + '.');
-      return;
+  // Set headers.
+  for (var name in headers) {
+    if (headers.hasOwnProperty(name)) {
+      xhr.setRequestHeader(name, headers[name]);
     }
+  }
 
-    // Get the response, which is in JSON format.
-    var response = xhr.getResponseJson();
-
-    // Check if there were any errors.
-    if (response.hasOwnProperty('errors')) {
-      console.log('Introspection query for ' + endpoint + ' failed with GraphQL errors.', response['errors']);
-      return;
-    }
-
-    // Fetch the raw schema.
-    var schema = response['data']['__schema'];
-
-    // Create a type mapping for fast name lookup.
-    var newTypes = {};
-
-    // Modify the old type objects and add them to new types.
-    for (var i = 0, type; type = schema.types[i]; i++) {
-      // Extract the type name as the key.
-      var typeName = type['name'];
-
-      // Set the modified type object under the type name.
-      newTypes[typeName] = type;
-
-      // Create a field mapping for fast name lookup.
-      var newFields = {};
-
-      // Determine if there are any fields.
-      if (type['fields'] !== null) {
-        // Modify the old field objects and add them to new fields.
-        for (var j = 0, field; field = type.fields[j]; j++) {
-          // Extract the field name as the key.
-          var fieldName = field['name'];
-
-          // Set the modified field object under the field name.
-          newFields[fieldName] = field;
-        }
-      }
-
-      // Replace the old fields with the new fields.
-      type['fields'] = newFields;
-    }
-
-    // Get all possible object and interface types for fragment block generation.
-    var possibleTypes = goog.array.filter(schema['types'], function(type) {
-      return (type.kind === 'OBJECT' || type.kind === 'INTERFACE') && !type.name.startsWith('__');
-    });
-
-    // Add the special schema root type, which contains the root fields and all possible types
-    newTypes[Blockly.GraphQLBlock.ROOT_TYPE] = {
-      'fields': {},
-      'possibleTypes': possibleTypes
-    };
-
-    // If there is a query type, add it to the root fields.
-    if (schema['queryType'] !== null) {
-      newTypes[Blockly.GraphQLBlock.ROOT_TYPE]['fields']['query'] = {
-        'args': [],
-        'description': 'A GraphQL query.',
-        'type': {
-          'kind': 'OBJECT',
-          'name': schema['queryType']['name']
-        }
-      };
-    }
-
-    // If there is a mutation type, add it to the root fields.
-    if (schema['mutationType'] !== null) {
-      newTypes[Blockly.GraphQLBlock.ROOT_TYPE]['fields']['mutation'] = {
-        'args': [],
-        'description': 'A GraphQL mutation.',
-        'type': {
-          'kind': 'OBJECT',
-          'name': schema['mutationType']['name']
-        }
-      };
-    }
-
-    // Replace the old types with the new types.
-    schema['types'] = newTypes;
-
-    // Store the modified schema in cache.
-    Blockly.GraphQLBlock.schemas[endpoint] = schema;
-
-    // Fetch all blocks from the current workspace.
-    // TODO(bobbyluig): The main workspace might
-    var allBlocks = Blockly.mainWorkspace.getAllBlocks();
-
-    // Go through blocks.
-    for (var i = 0, block; block = allBlocks[i]; i++) {
-      // Filter by GraphQL blocks.
-      if (block.type === 'gql') {
-        // Inform the block that it should update its own schema.
-        block.updateSchema();
-      }
-    }
-  }, 'POST', JSON.stringify(data), headers);
+  // Send body.
+  xhr.send(JSON.stringify(data));
 };
 
 // The GraphQL mutator for adding and removing fields.
@@ -520,7 +558,7 @@ Blockly.Blocks['gql'] = {
       case 'Boolean':
         return 'boolean';
       default:
-        return 'any';
+        return 'text';
     }
   },
 
@@ -615,7 +653,7 @@ Blockly.Blocks['gql'] = {
       var parameter = this.appendValueInput('GQL_PARAMETER' + i)
         .appendField(this.gqlParameters[i].gqlName)
         .setAlign(Blockly.ALIGN_RIGHT)
-        .setCheck(['String']);
+        .setCheck([this.gqlTypeToBlocklyType(this.gqlParameters[i].gqlType), 'gql_null']);
 
       // For fields that can be null, add a shadow block.
       if (!this.gqlParameters[i].gqlType.endsWith('!')) {

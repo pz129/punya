@@ -134,9 +134,6 @@
     <copy toFile="${classes.files.dir}/dx.jar" file="${lib.dir}/android/tools/dx.jar" />
     <copy toFile="${classes.files.dir}/CommonVersion.jar" file="${build.dir}/common/CommonVersion.jar" />
 
-    <copy toFile="${classes.files.dir}/okhttp.jar" file="${lib.dir}/ok/okhttp-3.11.0.jar" />
-    <copy toFile="${classes.files.dir}/okio.jar" file="${lib.dir}/ok/okio-1.15.0.jar" />
-
     <property name="classes.tools.dir" location="${BuildServer-class.dir}/tools" />
     <copy todir="${classes.tools.dir}">
       <fileset dir="${lib.dir}/android/tools" includes="*/aapt" />
