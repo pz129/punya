@@ -900,6 +900,7 @@
 (module-static #t)
 
 (define-alias CsvUtil <com.google.appinventor.components.runtime.util.CsvUtil>)
+(define-alias JsonUtil <com.google.appinventor.components.runtime.util.JsonUtil>)
 (define-alias Double <java.lang.Double>)
 (define-alias Float <java.lang.Float>)
 (define-alias Integer <java.lang.Integer>)

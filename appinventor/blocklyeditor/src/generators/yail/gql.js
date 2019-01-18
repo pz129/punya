@@ -54,6 +54,8 @@ Blockly.Yail['gql'] = function() {
       // Determine how to represent the argument, defaulting to null.
       if (args[i] === null) {
         combination.push('"null"');
+      } else if (this.gqlTypeToYailType(argType) === 'list') {
+        combination.push(Blockly.Yail.YAIL_OPEN_COMBINATION + 'JsonUtil:getJsonRepresentation' + Blockly.Yail.YAIL_SPACER + args[i] + Blockly.Yail.YAIL_CLOSE_COMBINATION);
       } else if (this.gqlTypeToYailType(argType) !== 'text') {
         combination.push(args[i]);
       } else {
