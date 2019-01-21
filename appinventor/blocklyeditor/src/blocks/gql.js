@@ -613,6 +613,26 @@ Blockly.Blocks['gql'] = {
   },
 
   domToMutation: function(xmlElement) {
+    // Mutations must be idempotent for undo and redo to work correctly. The only mutation that can be applied by the
+    // user is a change in the number of fields.
+    if (this.gqlHasFields) {
+      // Remove all old fields.
+      for (var i = 0; i < this.itemCount_; i++) {
+        this.removeInput(this.repeatingInputName + i);
+      }
+
+      // Update field count.
+      this.itemCount_ = parseInt(xmlElement.getAttribute('gql_fields'));
+
+      // Create new fields.
+      for (var i = 0; i < this.itemCount_; i++) {
+        this.addInput(i);
+      }
+
+      // There are no more mutations to apply. Nothing else could have been changed by the user.
+      return;
+    }
+
     // Extract basic mutation attributes shared by all GraphQL blocks.
     this.gqlUrl = xmlElement.getAttribute('gql_url');
     this.gqlName = xmlElement.getAttribute('gql_name');
