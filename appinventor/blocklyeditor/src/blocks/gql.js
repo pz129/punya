@@ -483,16 +483,18 @@ Blockly.GraphQLBlock.updateSchema = function(endpoint, headers) {
       // Store the modified schema in cache.
       Blockly.GraphQLBlock.schemas[endpoint] = schema;
 
-      // Fetch all blocks from the current workspace.
-      // TODO(bobbyluig): The main workspace might
-      var allBlocks = Blockly.mainWorkspace.getAllBlocks();
+      // If the workspace was already injected, update the schema on the appropriate blocks.
+      if (Blockly.mainWorkspace != null) {
+        // Fetch all blocks from the current workspace.
+        var allBlocks = Blockly.mainWorkspace.getAllBlocks();
 
-      // Go through blocks.
-      for (var i = 0, block; block = allBlocks[i]; i++) {
-        // Filter by GraphQL blocks.
-        if (block.type === 'gql') {
-          // Inform the block that it should update its own schema.
-          block.updateSchema();
+        // Go through blocks.
+        for (var i = 0, block; block = allBlocks[i]; i++) {
+          // Filter by GraphQL blocks.
+          if (block.type === 'gql') {
+            // Inform the block that it should update its own schema.
+            block.updateSchema();
+          }
         }
       }
     }
