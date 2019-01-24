@@ -151,6 +151,11 @@ Blockly.FieldFlydown.prototype.showFlydownMaker_ = function() {
  * Creates a Flydown block of the getter and setter blocks for the parameter name in this field.
  */
 Blockly.FieldFlydown.prototype.showFlydown_ = function() {
+  // Ensure that the flydown is not disposed.
+  if (this.borderRect_ == null) {
+    return;
+  }
+
   // Hide open context menus, dropdowns, flyouts, and other flydowns.
   Blockly.hideChaff();
 

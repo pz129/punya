@@ -37,7 +37,7 @@ Blockly.Yail.YAIL_ADD_TO_LIST = "(add-to-list ";
 Blockly.Yail.YAIL_BEGIN = "(begin ";
 // This "break" symbol must match the one that is used in the
 // foreach macro, forrange and while macros
-Blockly.Yail.YAIL_BREAK = "*yail-break*";
+Blockly.Yail.YAIL_BREAK = " ";
 Blockly.Yail.YAIL_CALL_COMPONENT_METHOD = "(call-component-method ";
 Blockly.Yail.YAIL_CALL_COMPONENT_TYPE_METHOD = "(call-component-type-method ";
 Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE = "(call-yail-primitive ";

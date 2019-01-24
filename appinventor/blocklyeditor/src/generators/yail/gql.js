@@ -9,122 +9,59 @@ Blockly.Yail['gql_null'] = function() {
 
 // Code generator for GraphQL blocks.
 Blockly.Yail['gql'] = function() {
-  // If the blocks is a scalar, then the code is just the field name.
-  if (!this.gqlHasFields) {
-    return [Blockly.Yail.quote_(this.gqlName), Blockly.Yail.ORDER_ATOMIC];
+  // Get the selection name.
+  var selectionName = (this.gqlParent === null) ? '... on ' + this.gqlName : this.gqlName;
+
+  // Begin array selection for arguments.
+  var selectionArguments = Blockly.Yail.YAIL_OPEN_COMBINATION + 'GqlArgument[]';
+
+  // Add all arguments.
+  for (var i = 0; i < this.gqlParameters.length; i++) {
+    // Extract the name.
+    var argumentName = this.gqlParameters[i].gqlName;
+
+    // Extract the type.
+    var argumentType = this.gqlParameters[i].gqlType;
+
+    // Recursively generate the value, defaulting to null.
+    var argumentValue = Blockly.Yail.valueToCode(this, 'GQL_PARAMETER' + i, Blockly.Yail.ORDER_NONE) || '#!null';
+
+    // Create a new argument object.
+    var gqlArgument = Blockly.Yail.YAIL_OPEN_COMBINATION + 'GqlArgument'
+      + Blockly.Yail.YAIL_SPACER + Blockly.Yail.quote_(argumentName)
+      + Blockly.Yail.YAIL_SPACER + Blockly.Yail.quote_(argumentType)
+      + Blockly.Yail.YAIL_SPACER + argumentValue
+      + Blockly.Yail.YAIL_CLOSE_COMBINATION;
+
+    // Add the argument to the array.
+    selectionArguments += Blockly.Yail.YAIL_SPACER + gqlArgument;
   }
 
-  // If the block is not a scalar but does not have fields, there is no code to generate.
-  if (this.itemCount_ === 0) {
-    return ['', Blockly.Yail.ORDER_ATOMIC];
-  }
+  // Close the arguments array.
+  selectionArguments += Blockly.Yail.YAIL_CLOSE_COMBINATION;
 
-  // Keep track of an array of items to concatenate.
-  var combination = [];
-
-  // The first item in the list is the list constructor, which is not part of the query string.
-  combination.push(Blockly.Yail.YAIL_LIST_CONSTRUCTOR);
-
-  // The field name (or fragment) is the first query element.
-  var nameWithPrefix = (this.gqlParent === null) ? '... on ' + this.gqlName : this.gqlName;
-  combination.push(Blockly.Yail.quote_(nameWithPrefix));
-
-  // If there are parameters, add them.
-  if (this.gqlParameters.length > 0) {
-    // Create a list of arguments.
-    var args = [];
-
-    // Add all parameters.
-    for (var i = 0; i < this.gqlParameters.length; i++) {
-      // Default to null.
-      args.push(Blockly.Yail.valueToCode(this, 'GQL_PARAMETER' + i, Blockly.Yail.ORDER_NONE) || null);
-    }
-
-    // Open parenthesis.
-    combination.push('"("');
-
-    // Add parameter names and arguments.
-    for (var i = 0; i < args.length; i++) {
-      // Add the parameter name.
-      combination.push(Blockly.Yail.quote_(this.gqlParameters[i].gqlName + ': '));
-
-      // Get type type of the argument.
-      var argType = this.gqlParameters[i].gqlType;
-
-      // Determine how to represent the argument, defaulting to null.
-      if (args[i] === null) {
-        combination.push('"null"');
-      } else if (this.gqlTypeToYailType(argType) === 'list') {
-        combination.push(Blockly.Yail.YAIL_OPEN_COMBINATION + 'JsonUtil:getJsonRepresentation' + Blockly.Yail.YAIL_SPACER + args[i] + Blockly.Yail.YAIL_CLOSE_COMBINATION);
-      } else if (this.gqlTypeToYailType(argType) !== 'text') {
-        combination.push(args[i]);
-      } else {
-        combination.push('"\\\""');
-        combination.push(args[i]);
-        combination.push('"\\\""');
-      }
-
-      // Add commas in between.
-      if (i !== args.length - 1) {
-        combination.push('", "');
-      }
-    }
-
-    // Close parenthesis.
-    combination.push('")"');
-  }
-
-  // Add opening bracket.
-  combination.push('" {"');
+  // Begin array for selection set.
+  var selectionSet = Blockly.Yail.YAIL_OPEN_COMBINATION + 'GqlSelection[]';
 
   // Add all object fields.
-  for (var i = 0; i < this.itemCount_; i++) {
-    // Recursively generate code for the field.
-    var objectField = Blockly.Yail.valueToCode(this, 'GQL_FIELD' + i, Blockly.Yail.ORDER_NONE);
+  for (var i = 0; i < this.itemCount_ || 0; i++) {
+    // Recursively generate code for the selection.
+    var gqlSelection = Blockly.Yail.valueToCode(this, 'GQL_FIELD' + i, Blockly.Yail.ORDER_NONE);
 
-    // Only add the field if it is non-empty.
-    if (objectField) {
-      combination.push('" "');
-      combination.push(objectField);
-    }
+    // Add selection to array.
+    selectionSet += Blockly.Yail.YAIL_SPACER + gqlSelection;
   }
 
-  // Add closing bracket.
-  combination.push('" }"');
+  // Close the selection set array.
+  selectionSet += Blockly.Yail.YAIL_CLOSE_COMBINATION;
 
-  // Begin generating string concatenation code.
-  var code = Blockly.Yail.YAIL_CALL_YAIL_PRIMITIVE + 'string-append' + Blockly.Yail.YAIL_SPACER;
-
-  // Add all items in the combination.
-  code += Blockly.Yail.YAIL_OPEN_COMBINATION;
-  code += combination.join(Blockly.Yail.YAIL_SPACER);
-  code += Blockly.Yail.YAIL_CLOSE_COMBINATION;
-
-  // Prepare to create a new combination (for type coercions).
-  code += Blockly.Yail.YAIL_SPACER + Blockly.Yail.YAIL_QUOTE;
-
-  // Open combination.
-  code += Blockly.Yail.YAIL_OPEN_COMBINATION;
-
-  // Place the text type for all items in combinations except for the list constructor.
-  for (var i = 0; i < combination.length - 1; i++) {
-    code += 'text';
-
-    // Add a spacer in between.
-    if (i !== combination.length - 2) {
-      code += Blockly.Yail.YAIL_SPACER;
-    }
-  }
-
-  // Close combination.
-  code += Blockly.Yail.YAIL_CLOSE_COMBINATION;
-
-  // Indicate that we are performing a join.
-  code += Blockly.Yail.YAIL_SPACER + '"join"';
-
-  // Close final combination.
-  code += Blockly.Yail.YAIL_CLOSE_COMBINATION;
+  // Create a new selection object.
+  var gqlSelection = Blockly.Yail.YAIL_OPEN_COMBINATION + 'GqlSelection'
+    + Blockly.Yail.YAIL_SPACER + Blockly.Yail.quote_(selectionName)
+    + Blockly.Yail.YAIL_SPACER + selectionArguments
+    + Blockly.Yail.YAIL_SPACER + selectionSet
+    + Blockly.Yail.YAIL_CLOSE_COMBINATION;
 
   // Return code.
-  return [code, Blockly.Yail.ORDER_ATOMIC];
+  return [gqlSelection, Blockly.Yail.ORDER_ATOMIC];
 };

@@ -107,7 +107,7 @@ Blockly.GraphQLBlock.checkType = function(childConnection, parentConnection) {
 
   // Degrade to a normal type check for parent blocks that do not require special validation.
   if (parentBlock.typeName !== 'GraphQL' && parentBlock.type !== 'gql') {
-    return parentConnection.check_.indexOf('String') !== -1;
+    return parentConnection.check_.indexOf('gql') !== -1;
   }
 
   // If the parent block is the query method, perform root and endpoint checking.
@@ -255,13 +255,78 @@ Blockly.GraphQLBlock.traverseTypeRef = function(typeRef) {
   return typeRef;
 };
 
-// Traverses a type reference to get a type string.
-Blockly.GraphQLBlock.typeString = function(typeRef) {
-  // Handle base case.
-  if (typeRef.ofType === null) {
-    return typeRef.name;
+// Create a default argument block if possible.
+Blockly.GraphQLBlock.defaultArgument = function(typeRef, defaultValue) {
+  // No need to handle null default values.
+  if (defaultValue === null) {
+    return null;
   }
 
+  // Create a block.
+  var block = document.createElement('block');
+
+  // Get top level type.
+  var type = (typeRef.kind === 'NON_NULL') ? typeRef.ofType : typeRef;
+
+  // Handle booleans.
+  if (type.name === 'Boolean') {
+    // Set type.
+    block.setAttribute('type', 'logic_boolean');
+
+    // Create field with value.
+    var field = document.createElement('field');
+    field.setAttribute('name', 'BOOL');
+    field.innerText = defaultValue.toString().toUpperCase();
+
+    // Add field to block.
+    block.appendChild(field);
+  }
+
+  // Handle numbers.
+  else if (type.name === 'Int' || type.name === 'Float') {
+    // Set type.
+    block.setAttribute('type', 'math_number');
+
+    // Create field with value.
+    var field = document.createElement('field');
+    field.setAttribute('name', 'NUM');
+    field.innerText = defaultValue.toString();
+
+    // Add field to block.
+    block.appendChild(field);
+  }
+
+  // Handle strings.
+  else if (type.name === 'String' || type.name === 'ID') {
+    // Set type.
+    block.setAttribute('type', 'text');
+
+    // Create field with value.
+    var field = document.createElement('field');
+    field.setAttribute('name', 'TEXT');
+    field.innerText = defaultValue.slice(1, defaultValue.length - 1);
+
+    // Add field to block.
+    block.appendChild(field);
+  }
+
+  // Handle arrays.
+  else if (Object.prototype.toString.call(defaultValue) === '[object Array]') {
+    // TODO(bobbyluig): Handle default arguments for array type.
+    return null;
+  }
+
+  // Handle objects.
+  else {
+    // TODO(bobbyluig): Handle objects when dictionary support is merged.
+    return null;
+  }
+
+  return block;
+};
+
+// Traverses a type reference to get a type string.
+Blockly.GraphQLBlock.typeString = function(typeRef) {
   // Handle not null types.
   if (typeRef.kind === 'NON_NULL') {
     return Blockly.GraphQLBlock.typeString(typeRef.ofType) + '!';
@@ -271,6 +336,9 @@ Blockly.GraphQLBlock.typeString = function(typeRef) {
   if (typeRef.kind === 'LIST') {
     return '[' + Blockly.GraphQLBlock.typeString(typeRef.ofType) + ']';
   }
+
+  // Handle base case.
+  return typeRef.name;
 };
 
 // Creates a list of block elements from a given type.
@@ -326,8 +394,35 @@ Blockly.GraphQLBlock.buildTypeBlocks = function(gqlUrl, gqlBaseType) {
       gqlParameter.setAttribute('gql_name', arg.name);
       gqlParameter.setAttribute('gql_type', fullType);
 
+      // Create a new parameter value.
+      var gqlValue = document.createElement('value');
+      gqlValue.setAttribute('name', 'GQL_PARAMETER' + j);
+
+      // For fields that can be null, add a shadow block.
+      if (!fullType.endsWith('!')) {
+        // Create a new shadow block.
+        var nullBlock = document.createElement('shadow');
+        nullBlock.setAttribute('type', 'gql_null');
+
+        // Add shadow block to parameter.
+        gqlValue.appendChild(nullBlock);
+      }
+
+      // Create a default argument block if possible.
+      var defaultArgument = Blockly.GraphQLBlock.defaultArgument(arg.type, arg.defaultValue);
+
+      // If the default argument block exists, add it to the value.
+      if (defaultArgument !== null) {
+        gqlValue.appendChild(defaultArgument);
+      }
+
       // Add parameter to mutation.
       mutation.appendChild(gqlParameter);
+
+      // If the value is not empty, add it to the block.
+      if (gqlValue.childNodes.length > 0) {
+        block.appendChild(gqlValue);
+      }
     }
   }
 
@@ -536,39 +631,41 @@ Blockly.Blocks['gql_null'] = {
   }
 };
 
+// Converts a full type string to its corresponding Yail type.
+Blockly.GraphQLBlock.gqlTypeToYailType = function(typeString) {
+  // Strip out the not null character at the end.
+  if (typeString.endsWith('!')) {
+    typeString = typeString.substring(0, typeString.length - 1);
+  }
+
+  // Check for list type.
+  if (typeString.startsWith('[') && typeString.endsWith(']')) {
+    return 'list';
+  }
+
+  // Check for primitive types, defaulting to any for unknown types.
+  switch (typeString) {
+    case 'Int':
+    case 'Float':
+      return 'number';
+    case 'ID':
+    case 'String':
+      return 'text';
+    case 'Boolean':
+      return 'boolean';
+    default:
+      return 'text';
+  }
+};
+
+// Convert a full type string to its corresponding Blockly type.
+Blockly.GraphQLBlock.gqlTypeToBlocklyType = function(typeString) {
+  var yailType = Blockly.GraphQLBlock.gqlTypeToYailType(typeString);
+  return Blockly.Blocks.Utilities.YailTypeToBlocklyType(yailType, Blockly.Blocks.Utilities.INPUT);
+};
+
 // The base GraphQL block type.
 Blockly.Blocks['gql'] = {
-  gqlTypeToYailType: function(typeString) {
-    // Strip out the not null character at the end.
-    if (typeString.endsWith('!')) {
-      typeString = typeString.substring(0, typeString.length - 1);
-    }
-
-    // Check for list type.
-    if (typeString.startsWith('[') && typeString.endsWith(']')) {
-      return 'list';
-    }
-
-    // Check for primitive types, defaulting to any for unknown types.
-    switch (typeString) {
-      case 'Int':
-      case 'Float':
-        return 'number';
-      case 'ID':
-      case 'String':
-        return 'text';
-      case 'Boolean':
-        return 'boolean';
-      default:
-        return 'text';
-    }
-  },
-
-  gqlTypeToBlocklyType: function(gqlType) {
-    var yailType = this.gqlTypeToYailType(gqlType);
-    return Blockly.Blocks.Utilities.YailTypeToBlocklyType(yailType, Blockly.Blocks.Utilities.INPUT);
-  },
-
   helpUrl: function() {
     var prefix = 'https://graphql-docs.com/docs/';
 
@@ -671,21 +768,16 @@ Blockly.Blocks['gql'] = {
 
     // Add any parameters if they exist.
     for (var i = 0; i < this.gqlParameters.length; i++) {
-      // Create the parameter.
-      var parameter = this.appendValueInput('GQL_PARAMETER' + i)
+      // Create the parameter with the appropriate type checks.
+      // TODO(bobbyluig): Do type checks only with full type reference when dictionary support arrives.
+      this.appendValueInput('GQL_PARAMETER' + i)
         .appendField(this.gqlParameters[i].gqlName)
         .setAlign(Blockly.ALIGN_RIGHT)
-        .setCheck([this.gqlTypeToBlocklyType(this.gqlParameters[i].gqlType), 'gql_null']);
-
-      // For fields that can be null, add a shadow block.
-      if (!this.gqlParameters[i].gqlType.endsWith('!')) {
-        var nullArgument = this.workspace.newBlock('gql_null');
-        nullArgument.outputConnection.connect(parameter.connection);
-      }
+        .setCheck([Blockly.GraphQLBlock.gqlTypeToBlocklyType(this.gqlParameters[i].gqlType), 'gql_null']);
     }
 
-    // The return type of the block is a string.
-    this.setOutput(true, ['String']);
+    // The return type of the block is initially gql.
+    this.setOutput(true, ['gql']);
 
     // For non-scalar blocks, users should be able add and remove fields.
     if (this.gqlHasFields) {
@@ -713,6 +805,7 @@ Blockly.Blocks['gql'] = {
   },
 
   compose: Blockly.compose,
+
   decompose: function(workspace) {
     return Blockly.decompose(workspace, 'gql_mutator', this);
   },
@@ -721,8 +814,9 @@ Blockly.Blocks['gql'] = {
 
   addEmptyInput: function() {
   },
+
   addInput: function(inputNumber) {
-    return this.appendIndentedValueInput(this.repeatingInputName + inputNumber).setCheck(['String']);
+    return this.appendIndentedValueInput(this.repeatingInputName + inputNumber).setCheck(['gql']);
   },
 
   onchange: function(e) {
