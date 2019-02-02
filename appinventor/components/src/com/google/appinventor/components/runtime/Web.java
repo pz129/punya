@@ -779,6 +779,34 @@ public class Web extends AndroidNonvisibleComponent implements Component {
     }
   }
 
+  @SimpleFunction
+  // Returns a JSON string for a given JSON object
+  public String JsonObjectEncode(Object jsonObject) {
+    try {
+      return encodeJsonObject(jsonObject);
+    } catch (IllegalArgumentException e) {
+      form.dispatchErrorOccurredEvent(this, "JsonObjectEncode",
+          ErrorMessages.ERROR_WEB_JSON_TEXT_DECODE_FAILED, jsonObject);
+      return "";
+    }
+  }
+
+  /**
+   * Encodes the given JSON object to a JSON string
+   *
+   * @param jsonObject the JSON object to encode
+   * @return the encoded string
+   * @throws IllegalArgumentException if the JSON object can't be encoded
+   */
+  // VisibleForTesting
+  static String encodeJsonObject(Object jsonObject) throws IllegalArgumentException {
+    try {
+      return JsonUtil.getJsonRepresentation(jsonObject);
+    } catch (JSONException e) {
+      throw new IllegalArgumentException("jsonObject is not a legal JSON object");
+    }
+  }
+
   /**
    * Decodes the given XML string to produce a list structure. <tag>string</tag> decodes to
    * a list that contains a pair of tag and string.  More generally, if obj1, obj2, ...

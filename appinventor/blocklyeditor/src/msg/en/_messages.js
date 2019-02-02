@@ -896,6 +896,77 @@ Blockly.Msg.en.switch_language_to_english = {
     Blockly.Msg.LANG_LISTS_LOOKUP_IN_PAIRS_INPUT = 'look up in pairs  key %1 pairs %2 notFound %3';
     Blockly.Msg.LANG_LISTS_LOOKUP_IN_PAIRS_TOOLTIP = 'Returns the value associated with the key in the list of pairs';
 
+// Dictionaries Blocks
+    Blockly.Msg.LANG_CATEGORY_DICTIONARIES = 'Dictionaries';
+    Blockly.Msg.LANG_DICTIONARIES_CREATE_EMPTY_TITLE = 'create empty dict';
+
+    //Blockly.Msg.LANG_DICTIONARIES_CREATE_WITH_EMPTY_HELPURL = 'http://appinventor.mit.edu/explore/ai2/support/blocks/lists#makealist';
+    Blockly.Msg.LANG_DICTIONARIES_CREATE_WITH_TITLE_MAKE_DICTIONARY = 'make a dict';
+    Blockly.Msg.LANG_DICTIONARIES_CREATE_WITH_TOOLTIP = 'Create a dictionary';
+
+    Blockly.Msg.LANG_DICTIONARIES_CREATE_WITH_CONTAINER_TITLE_ADD = 'dict';
+    Blockly.Msg.LANG_DICTIONARIES_CREATE_WITH_CONTAINER_TOOLTIP = 'Add, remove, or reorder sections to reconfigure this dictionary block.';
+
+    Blockly.Msg.LANG_DICTIONARIES_CREATE_WITH_PAIR_TITLE = 'pair';
+    Blockly.Msg.LANG_DICTIONARIES_CREATE_WITH_PAIR_TOOLTIP = 'Add a pair to the dictionary';
+
+    Blockly.Msg.LANG_DICTIONARIES_PAIRS_INPUT = 'pair key %1 value %2';
+    Blockly.Msg.LANG_DICTIONARIES_PAIRS_TOOLTIP = 'Creates a pair with the key and value provided';
+    Blockly.Msg.LANG_DICTIONARIES_MAKE_PAIR_TITLE = 'make a pair';
+
+    Blockly.Msg.LANG_DICTIONARIES_SET_PAIR_INPUT = 'set dict pair dict %1 pair %2';
+    Blockly.Msg.LANG_DICTIONARIES_SET_PAIR_TITLE = 'set dict pair';
+    Blockly.Msg.LANG_DICTIONARIES_SET_PAIR_TOOLTIP = 'Set a pair in a dictionary.';
+
+    Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIR_INPUT = 'delete dict pair dict %1 key %2';
+    Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIR_TITLE = 'delete dict pair';
+    Blockly.Msg.LANG_DICTIONARIES_DELETE_PAIR_TOOLTIP = 'Delete a pair in a dictionary given its key.';
+
+    Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_LOOKUP_INPUT = 'look up in dict key %1 dict %2 notFound %3';
+    Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_LOOKUP_TOOLTIP = 'Returns the value in the dictionary associated with the key';
+    Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_LOOKUP_TITLE = 'look up in a dict';
+
+    Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_INPUT = 'recursive look up in dict  keys %1 dict %2 notFound %3';
+    Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_TOOLTIP = 'Returns the value in the nested dictionary';
+    Blockly.Msg.LANG_DICTIONARIES_DICTIONARY_RECURSIVE_LOOKUP_TITLE = 'recursive look up in a dict';
+
+    Blockly.Msg.LANG_DICTIONARIES_GETTERS_TITLE = 'get';
+    Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_TITLE = 'keys';
+    Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_INPUT = 'dict';
+    Blockly.Msg.LANG_DICTIONARIES_GET_KEYS_TOOLTIP = 'Returns a list of all of the keys in the dictionary';
+
+    Blockly.Msg.LANG_DICTIONARIES_GET_VALUES_TITLE = 'values';
+    Blockly.Msg.LANG_DICTIONARIES_GET_VALUES_INPUT = 'dict';
+    Blockly.Msg.LANG_DICTIONARIES_GET_VALUES_TOOLTIP = 'Returns a list of all of the values in the dictionary';
+
+    Blockly.Msg.LANG_DICTIONARIES_IS_KEY_IN_INPUT = 'is key in dict? key %1 dict %2';
+    Blockly.Msg.LANG_DICTIONARIES_IS_KEY_IN_TOOLTIP = 'Check if a key is in a dictionary';
+    Blockly.Msg.LANG_DICTIONARIES_IS_KEY_IN_TITLE = 'is key in dict?';
+
+    Blockly.Msg.LANG_DICTIONARIES_LENGTH_TITLE = 'length of dict';
+    Blockly.Msg.LANG_DICTIONARIES_LENGTH_INPUT = 'dict';
+    Blockly.Msg.LANG_DICTIONARIES_LENGTH_TOOLTIP = 'Returns the number of key-value pairs in the dictionary';
+
+    Blockly.Msg.LANG_DICTIONARIES_ALIST_TO_DICT_TITLE = 'list of pairs to dict';
+    Blockly.Msg.LANG_DICTIONARIES_ALIST_TO_DICT_INPUT = 'pairs';
+    Blockly.Msg.LANG_DICTIONARIES_ALIST_TO_DICT_TOOLTIP = 'Converts a list of pairs to a dictionary';
+
+    Blockly.Msg.LANG_DICTIONARIES_DICT_TO_ALIST_TITLE = 'dict to list of pairs';
+    Blockly.Msg.LANG_DICTIONARIES_DICT_TO_ALIST_INPUT = 'dict';
+    Blockly.Msg.LANG_DICTIONARIES_DICT_TO_ALIST_TOOLTIP = 'Converts a dictionary to a list of pairs';
+
+    Blockly.Msg.LANG_DICTIONARIES_COPY_TITLE = 'copy dict';
+    Blockly.Msg.LANG_DICTIONARIES_COPY_INPUT = 'dict';
+    Blockly.Msg.LANG_DICTIONARIES_COPY_TOOLTIP = 'Returns a shallow copy of the dictionary';
+
+    Blockly.Msg.LANG_DICTIONARIES_COMBINE_DICTS_INPUT = 'combine dicts dict1 %1 dict2 %2';
+    Blockly.Msg.LANG_DICTIONARIES_COMBINE_DICTS_TOOLTIP = 'Add the pairs of dict2 to dict1';
+    Blockly.Msg.LANG_DICTIONARIES_COMBINE_DICTS_TITLE = 'combine dicts';
+
+    Blockly.Msg.LANG_DICTIONARIES_IS_DICT_TITLE = 'is a dict?';
+    Blockly.Msg.LANG_DICTIONARIES_IS_DICT_INPUT = 'thing';
+    Blockly.Msg.LANG_DICTIONARIES_IS_DICT_TOOLTIP = 'Tests if something is a dictionary';
+
     /*Blockly.Msg.LANG_LISTS_INDEX_OF_HELPURL = 'http://publib.boulder.ibm.com/infocenter/lnxpcomp/v8v101/index.jsp?topic=%2Fcom.ibm.xlcpp8l.doc%2Flanguage%2Fref%2Farsubex.htm';
      Blockly.Msg.LANG_LISTS_INDEX_OF_TITLE_FIND = 'find';
      Blockly.Msg.LANG_LISTS_INDEX_OF_INPUT_OCCURRENCE = 'occurrence of item';

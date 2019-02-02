@@ -899,6 +899,10 @@ public interface OdeMessages extends Messages {
   @Description("Label on built-in-Lists-blocks branch of block selector tree")
   String builtinListsLabel();
 
+  @DefaultMessage("Dictionaries")
+  @Description("Label on built-in-Dictionaries-blocks branch of block selector tree")
+  String builtinDictionariesLabel();  
+
   @DefaultMessage("Colors")
   @Description("Label on built-in-Colors-blocks branch of block selector tree")
   String builtinColorsLabel();
@@ -4243,6 +4247,10 @@ public interface OdeMessages extends Messages {
   @Description("")
   String htmlTextParams();
 
+  @DefaultMessage("jsonObject")
+  @Description("")
+  String jsonObjectParams();
+
   @DefaultMessage("jsonText")
   @Description("")
   String jsonTextParams();
@@ -5548,6 +5556,10 @@ public interface OdeMessages extends Messages {
   @DefaultMessage("JsonTextDecode")
   @Description("")
   String JsonTextDecodeMethods();
+
+  @DefaultMessage("JsonObjectEncode")
+  @Description("")
+  String JsonObjectEncodeMethods();
 
   @DefaultMessage("XmlTextDecode")
   @Description("")
