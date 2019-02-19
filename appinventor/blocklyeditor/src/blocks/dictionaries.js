@@ -57,27 +57,13 @@ Blockly.Blocks['dictionaries_create_with'] = {
     // Rebuild the block's inputs.
     var itemBlock = containerBlock.getInputTargetBlock('STACK');
     while (itemBlock) {
-
-      console.log('---------ITEM BLOCK---------');
-      console.log(itemBlock);
-
       var input = this.addInput(this.itemCount_);
-
-      console.log('---------INPUT---------');
-      console.log(input);
 
       // Reconnect any child blocks.
       if (itemBlock.valueConnection_) {
         input.connection.connect(itemBlock.valueConnection_);
-
-        console.log("--------------VALUE CONNECTION--------------");
-        console.log(itemBlock.valueConnection_);
       } else {
-        var pairBlock = Blockly.mainWorkspace.newBlock('pair');
-
-        console.log("-------------ELSE-------------");
-        console.log(pairBlock);
-        
+        // var pairBlock = Blockly.mainWorkspace.newBlock('pair');
         // input.connection.connect(pairBlock.outputConnection);
         // console.log("PAIR CONNECTION:");
         // console.log(Blockly.Blocks['pair']);
@@ -88,7 +74,6 @@ Blockly.Blocks['dictionaries_create_with'] = {
         itemBlock.nextConnection.targetBlock();
     }
     if (this.itemCount_ == 0) {
-
       this.addEmptyInput();
     }
   },
