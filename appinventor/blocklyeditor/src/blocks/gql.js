@@ -157,6 +157,17 @@ Blockly.GraphQLBlock.instanceBlocks = function(uid) {
   return blocks;
 };
 
+// Determine whether a type should be quoted.
+Blockly.GraphQLBlock.shouldQuote = function(typeString) {
+  // Skip non-null.
+  if (typeString.endsWith('!')) {
+    typeString = typeString.substring(1, typeString.length - 1);
+  }
+
+  // Only scalar strings and ids should be quoted.
+  return typeString === 'String' || typeString === 'ID';
+};
+
 // Traverses a type reference to get the base type reference.
 Blockly.GraphQLBlock.traverseTypeRef = function(typeRef) {
   // Traverse type reference until we reach a base type.
@@ -256,48 +267,6 @@ Blockly.GraphQLBlock.buildTypeBlocks = function(gqlUrl, gqlBaseType) {
       gqlArguments.appendChild(argumentsBlock);
       block.appendChild(gqlArguments);
     }
-
-    // // Add parameters into the mutation.
-    // for (var j = 0, arg; arg = field.args[j]; j++) {
-    //   var gqlParameter = document.createElement('gql_parameter');
-    //
-    //   // Get the parameter's full type string.
-    //   var fullType = Blockly.GraphQLBlock.typeString(arg.type);
-    //
-    //   // Add parameter attributes.
-    //   gqlParameter.setAttribute('gql_name', arg.name);
-    //   gqlParameter.setAttribute('gql_type', fullType);
-    //
-    //   // Create a new parameter value.
-    //   var gqlValue = document.createElement('value');
-    //   gqlValue.setAttribute('name', 'GQL_PARAMETER' + j);
-    //
-    //   // For fields that can be null, add a shadow block.
-    //   if (!fullType.endsWith('!')) {
-    //     // Create a new shadow block.
-    //     var nullBlock = document.createElement('shadow');
-    //     nullBlock.setAttribute('type', 'gql_null');
-    //
-    //     // Add shadow block to parameter.
-    //     gqlValue.appendChild(nullBlock);
-    //   }
-    //
-    //   // Create a default argument block if possible.
-    //   var defaultArgument = Blockly.GraphQLBlock.defaultArgument(arg.type, arg.defaultValue);
-    //
-    //   // If the default argument block exists, add it to the value.
-    //   if (defaultArgument !== null) {
-    //     gqlValue.appendChild(defaultArgument);
-    //   }
-    //
-    //   // Add parameter to mutation.
-    //   mutation.appendChild(gqlParameter);
-    //
-    //   // If the value is not empty, add it to the block.
-    //   if (gqlValue.childNodes.length > 0) {
-    //     block.appendChild(gqlValue);
-    //   }
-    // }
   }
 
   // Get all possible types.
@@ -554,7 +523,7 @@ Blockly.Blocks['gql_mutator'] = {
 Blockly.Blocks['gql_null'] = {
   init: function() {
     // TODO(bobbyluig): Decide whether this should be colored the same as logic.
-    this.setColour(Blockly.LOGIC_CATEGORY_HUE);
+    this.setColour(Blockly.GraphQLBlock.PRIMARY_COLOR);
     this.appendDummyInput().appendField('null');
     this.setOutput(true, ['GraphQLNull']);
   }
@@ -796,24 +765,24 @@ Blockly.Blocks['gql'] = {
     }
 
     // Set the output to allow for enhanced type checking.
-    this.setOutput(true, [function(childConnection, parentConnection) {
-      // Get the child and parent source blocks.
-      var childBlock = childConnection.sourceBlock_;
-      var parentBlock = parentConnection.sourceBlock_;
+    this.setOutput(true, [function(sourceConnection, targetConnection) {
+      // Get the source and target blocks.
+      var sourceBlock = sourceConnection.sourceBlock_;
+      var targetBlock = targetConnection.sourceBlock_;
 
       // Degrade to a normal check for parent blocks that do not require special validation.
-      if (parentBlock.typeName !== 'GraphQL' && parentBlock.type !== 'gql') {
-        return parentConnection.check_.indexOf('GraphQL') !== -1;
+      if (targetBlock.typeName !== 'GraphQL' && targetBlock.type !== 'gql') {
+        return targetConnection.check_.indexOf('GraphQL') !== -1;
       }
 
       // If the parent block is the query method, perform root and endpoint checking.
-      if (parentBlock.typeName === 'GraphQL') {
+      if (targetBlock.typeName === 'GraphQL') {
         // Fetch the endpoint of the instance block.
-        var uid = childBlock.workspace.componentDb_.getUidForName(parentBlock.instanceName);
+        var uid = sourceBlock.workspace.componentDb_.getUidForName(targetBlock.instanceName);
         var endpoint = Blockly.GraphQLBlock.instances[uid];
 
         // Determine if the endpoints match.
-        if (endpoint !== childBlock.gqlUrl) {
+        if (endpoint !== sourceBlock.gqlUrl) {
           return false;
         }
 
@@ -826,7 +795,7 @@ Blockly.Blocks['gql'] = {
         }
 
         // Determine if the block is a valid root field.
-        if (!schema.types[Blockly.GraphQLBlock.ROOT_TYPE].fields.hasOwnProperty(childBlock.gqlName)) {
+        if (!schema.types[Blockly.GraphQLBlock.ROOT_TYPE].fields.hasOwnProperty(sourceBlock.gqlName)) {
           return false;
         }
 
@@ -835,22 +804,22 @@ Blockly.Blocks['gql'] = {
       }
 
       // Check endpoint compatibility.
-      if (childBlock.gqlUrl !== parentBlock.gqlUrl) {
+      if (sourceBlock.gqlUrl !== targetBlock.gqlUrl) {
         return false;
       }
 
       // Object type checking is only valid on blocks with an updated schema.
-      if (childBlock.gqlBaseType === undefined || parentBlock.gqlBaseType === undefined) {
+      if (sourceBlock.gqlBaseType === undefined || targetBlock.gqlBaseType === undefined) {
         return true;
       }
 
       // Fetch the schema.
-      var schema = Blockly.GraphQLBlock.schemas[childBlock.gqlUrl];
+      var schema = Blockly.GraphQLBlock.schemas[sourceBlock.gqlUrl];
 
       // Perform checking on fragments.
-      if (childBlock.gqlParent === null) {
+      if (sourceBlock.gqlParent === null) {
         // Get the parent type reference.
-        var parentTypeRef = schema.types[parentBlock.gqlBaseType];
+        var parentTypeRef = schema.types[targetBlock.gqlBaseType];
 
         // Get the parent type name and possible types.
         var allPossibleTypes = (parentTypeRef.possibleTypes || []).slice(0);
@@ -858,7 +827,7 @@ Blockly.Blocks['gql'] = {
 
         // Locate valid type.
         var validType = goog.array.find(allPossibleTypes, function(type) {
-          return Blockly.GraphQLBlock.traverseTypeRef(type).name === childBlock.gqlBaseType;
+          return Blockly.GraphQLBlock.traverseTypeRef(type).name === sourceBlock.gqlBaseType;
         });
 
         // Check for type validity.
@@ -870,10 +839,10 @@ Blockly.Blocks['gql'] = {
       // Perform checking on non-fragments.
       else {
         // Fetch the parent type, which must exist.
-        var parentType = schema.types[childBlock.gqlParent];
+        var parentType = schema.types[sourceBlock.gqlParent];
 
         // Check for field validity.
-        if (childBlock.gqlParent !== parentBlock.gqlBaseType || !parentType.fields.hasOwnProperty(childBlock.gqlName)) {
+        if (sourceBlock.gqlParent !== targetBlock.gqlBaseType || !parentType.fields.hasOwnProperty(sourceBlock.gqlName)) {
           return false;
         }
       }
@@ -892,14 +861,14 @@ Blockly.Blocks['gql_enum'] = {
     // Set the attributes for the block. Note that we need to store the current dropdown value.
     mutation.setAttribute('gql_url', this.gqlUrl);
     mutation.setAttribute('gql_base_type', this.gqlBaseType);
-    mutation.setAttribute('gql_value', (this.dropdown) ? this.dropdown.getValue() : this.gqlValue);
+    mutation.setAttribute('gql_value', this.getGqlValue());
 
     return mutation;
   },
 
   domToMutation: function(xmlElement) {
     // TODO(bobbyluig): Decide whether this should be colored the same as a constant.
-    this.setColour(Blockly.TEXT_CATEGORY_HUE);
+    this.setColour(Blockly.GraphQLBlock.PRIMARY_COLOR);
 
     // Get the attributes for the block. The value is used as an initial value for the dropdown.
     this.gqlUrl = xmlElement.getAttribute('gql_url');
@@ -914,6 +883,10 @@ Blockly.Blocks['gql_enum'] = {
 
     // Try to update the schema.
     this.updateSchema();
+  },
+
+  getGqlValue: function() {
+    return (this.dropdown) ? this.dropdown.getValue() : this.gqlValue;
   },
 
   getValues: function() {
@@ -946,33 +919,33 @@ Blockly.Blocks['gql_enum'] = {
     input.appendField(this.dropdown, 'DROPDOWN');
 
     // Set the output to check for valid attachment point.
-    this.setOutput(true, [function(childConnection, parentConnection) {
-      // Get the child and parent source blocks.
-      var childBlock = childConnection.sourceBlock_;
-      var parentBlock = parentConnection.sourceBlock_;
+    this.setOutput(true, [function(sourceConnection, targetConnection) {
+      // Get the source and target blocks.
+      var sourceBlock = sourceConnection.sourceBlock_;
+      var targetBlock = targetConnection.sourceBlock_;
 
       // Degrade to a normal check for non-specific parent blocks.
-      if (parentBlock.type !== 'gql_pair') {
-        return parentConnection.check_.indexOf('GraphQLEnum') !== -1;
+      if (targetBlock.type !== 'gql_pair') {
+        return targetConnection.check_.indexOf('GraphQLEnum') !== -1;
       }
 
       // Perform endpoint validation.
-      if (childBlock.gqlUrl !== parentBlock.gqlUrl) {
+      if (sourceBlock.gqlUrl !== targetBlock.gqlUrl) {
         return false;
       }
 
       // Fetch the parent input field.
-      var schema = Blockly.GraphQLBlock.schemas[parentBlock.gqlUrl];
-      var type = schema.types[parentBlock.gqlBaseType];
+      var schema = Blockly.GraphQLBlock.schemas[targetBlock.gqlUrl];
+      var type = schema.types[targetBlock.gqlBaseType];
       var inputField = goog.array.find(type.inputFields, function(item) {
-        return item.name === parentBlock.gqlName;
+        return item.name === targetBlock.gqlName;
       });
 
       // Perform type validation.
       var typeString = (inputField.type.kind === 'NON_NULL')
         ? Blockly.GraphQLBlock.typeString(inputField.type.ofType)
         : Blockly.GraphQLBlock.typeString(inputField.type);
-      return typeString === childBlock.gqlBaseType;
+      return typeString === sourceBlock.gqlBaseType;
     }]);
   }
 };
@@ -1031,38 +1004,38 @@ goog.object.extend(Blockly.Blocks['gql_dict'], {
     input.appendField(new Blockly.GqlDictionaryFlydown(this.gqlUrl, this.gqlBaseType), 'FLYDOWN');
 
     // Set the output to check for valid attachment point.
-    this.setOutput(true, [function(childConnection, parentConnection) {
-      // Get the child and parent source blocks.
-      var childBlock = childConnection.sourceBlock_;
-      var parentBlock = parentConnection.sourceBlock_;
+    this.setOutput(true, [function(sourceConnection, targetConnection) {
+      // Get the source and target blocks.
+      var sourceBlock = sourceConnection.sourceBlock_;
+      var targetBlock = targetConnection.sourceBlock_;
 
       // Degrade to a normal check for non-specific parent blocks.
-      if (parentBlock.type !== 'gql' && parentBlock.type !== 'gql_pair') {
-        return parentConnection.check_.indexOf('GraphQLDict') !== -1;
+      if (targetBlock.type !== 'gql' && targetBlock.type !== 'gql_pair') {
+        return targetConnection.check_.indexOf('GraphQLDict') !== -1;
       }
 
       // Perform endpoint validation.
-      if (childBlock.gqlUrl !== parentBlock.gqlUrl) {
+      if (sourceBlock.gqlUrl !== targetBlock.gqlUrl) {
         return false;
       }
 
       // Perform base type validation for anonymous input object.
-      if (parentBlock.type === 'gql') {
-        return childBlock.gqlBaseType === parentBlock.gqlParent + '.' + parentBlock.gqlName;
+      if (targetBlock.type === 'gql') {
+        return sourceBlock.gqlBaseType === targetBlock.gqlParent + '.' + targetBlock.gqlName;
       }
 
       // Deal with regular input objects.
-      var schema = Blockly.GraphQLBlock.schemas[parentBlock.gqlUrl];
-      var type = schema.types[parentBlock.gqlBaseType];
+      var schema = Blockly.GraphQLBlock.schemas[targetBlock.gqlUrl];
+      var type = schema.types[targetBlock.gqlBaseType];
       var inputField = goog.array.find(type.inputFields, function(item) {
-        return item.name === parentBlock.gqlName;
+        return item.name === targetBlock.gqlName;
       });
       var baseType = (inputField.type.kind === 'NON_NULL')
         ? Blockly.GraphQLBlock.typeString(inputField.type.ofType)
         : Blockly.GraphQLBlock.typeString(inputField.type);
 
       // Perform base type validation.
-      return childBlock.gqlBaseType === baseType;
+      return sourceBlock.gqlBaseType === baseType;
     }]);
   }
 });
@@ -1077,6 +1050,7 @@ goog.object.extend(Blockly.Blocks['gql_pair'], {
     mutation.setAttribute('gql_url', this.gqlUrl);
     mutation.setAttribute('gql_base_type', this.gqlBaseType);
     mutation.setAttribute('gql_name', this.gqlName);
+    mutation.setAttribute('gql_quote', this.gqlQuote);
 
     return mutation;
   },
@@ -1086,6 +1060,7 @@ goog.object.extend(Blockly.Blocks['gql_pair'], {
     this.gqlUrl = xmlElement.getAttribute('gql_url');
     this.gqlBaseType = xmlElement.getAttribute('gql_base_type');
     this.gqlName = xmlElement.getAttribute('gql_name');
+    this.gqlQuote = xmlElement.getAttribute('gql_quote') === 'true';
 
     // The initial output type is GraphQLPair.
     this.setOutput(true, ['GraphQLPair']);
@@ -1121,18 +1096,18 @@ goog.object.extend(Blockly.Blocks['gql_pair'], {
     this.setTooltip(inputField.description);
 
     // Set the output to check for valid attachment point.
-    this.setOutput(true, [function(childConnection, parentConnection) {
-      // Get the child and parent source blocks.
-      var childBlock = childConnection.sourceBlock_;
-      var parentBlock = parentConnection.sourceBlock_;
+    this.setOutput(true, [function(sourceConnection, targetConnection) {
+      // Get the source and target blocks.
+      var sourceBlock = sourceConnection.sourceBlock_;
+      var targetBlock = targetConnection.sourceBlock_;
 
       // Degrade to a normal check for non-specific parent blocks.
-      if (parentBlock.type !== 'gql_dict') {
-        return parentConnection.check_.indexOf('GraphQLPair') !== -1;
+      if (targetBlock.type !== 'gql_dict') {
+        return targetConnection.check_.indexOf('GraphQLPair') !== -1;
       }
 
       // Perform endpoint and base type validation.
-      return childBlock.gqlUrl === parentBlock.gqlUrl && childBlock.gqlBaseType === parentBlock.gqlBaseType;
+      return sourceBlock.gqlUrl === targetBlock.gqlUrl && sourceBlock.gqlBaseType === targetBlock.gqlBaseType;
     }]);
   }
 });
@@ -1160,6 +1135,7 @@ goog.object.extend(Blockly.Blocks['gql_list'], {
     // Set the attributes, where the type is the type string associated with the autocompletion value.
     mutation.setAttribute('gql_url', this.gqlUrl);
     mutation.setAttribute('gql_type', this.gqlType);
+    mutation.setAttribute('gql_quote', this.gqlQuote);
 
     return mutation;
   },
@@ -1168,6 +1144,7 @@ goog.object.extend(Blockly.Blocks['gql_list'], {
     // Get the attributes.
     this.gqlUrl = xmlElement.getAttribute('gql_url');
     this.gqlType = xmlElement.getAttribute('gql_type');
+    this.gqlQuote = xmlElement.getAttribute('gql_quote') === 'true';
 
     // There are additional actions that the parent class needs to perform.
     Blockly.domToMutation.call(this, xmlElement);
@@ -1191,28 +1168,28 @@ goog.object.extend(Blockly.Blocks['gql_list'], {
     input.appendField(new Blockly.GqlListFlydown(this.gqlUrl, this.gqlType), 'FLYDOWN');
 
     // Set the output to check for valid attachment point.
-    this.setOutput(true, [function(childConnection, parentConnection) {
-      // Get the child and parent source blocks.
-      var childBlock = childConnection.sourceBlock_;
-      var parentBlock = parentConnection.sourceBlock_;
+    this.setOutput(true, [function(sourceConnection, targetConnection) {
+      // Get the source and target blocks.
+      var sourceBlock = sourceConnection.sourceBlock_;
+      var targetBlock = targetConnection.sourceBlock_;
 
       // Degrade to a normal check for non-specific parent blocks.
-      if (parentBlock.type !== 'gql_pair') {
-        return parentConnection.check_.indexOf('GraphQLList') !== -1;
+      if (targetBlock.type !== 'gql_pair') {
+        return targetConnection.check_.indexOf('GraphQLList') !== -1;
       }
 
       // Fetch the parent input field.
-      var schema = Blockly.GraphQLBlock.schemas[parentBlock.gqlUrl];
-      var type = schema.types[parentBlock.gqlBaseType];
+      var schema = Blockly.GraphQLBlock.schemas[targetBlock.gqlUrl];
+      var type = schema.types[targetBlock.gqlBaseType];
       var inputField = goog.array.find(type.inputFields, function(item) {
-        return item.name === parentBlock.gqlName;
+        return item.name === targetBlock.gqlName;
       });
 
       // Perform type validation.
       var typeString = (inputField.type.kind === 'NON_NULL')
         ? Blockly.GraphQLBlock.typeString(inputField.type.ofType)
         : Blockly.GraphQLBlock.typeString(inputField.type);
-      return typeString.substring(1, typeString.length - 1) === childBlock.gqlType;
+      return typeString.substring(1, typeString.length - 1) === sourceBlock.gqlType;
     }]);
   }
 });
@@ -1265,22 +1242,27 @@ Blockly.GqlDictionaryFlydown.prototype.flydownBlocksXML_ = function() {
 
   // Add one pair for each argument.
   for (var i = 0, arg; arg = type.inputFields[i]; i++) {
+    // Create a key for the pair.
     var key = document.createElement('value');
     key.setAttribute('name', 'KEY');
 
+    // Create a fixed string block as the key.
     var keyBlock = document.createElement('block');
     keyBlock.setAttribute('type', 'text');
     keyBlock.setAttribute('editable', 'false');
     keyBlock.setAttribute('deletable', 'false');
     keyBlock.setAttribute('movable', 'false');
 
+    // Set the name of the key.
     var keyBlockField = document.createElement('field');
     keyBlockField.setAttribute('name', 'TEXT');
     keyBlockField.innerText = arg.name;
 
+    // Append key.
     keyBlock.appendChild(keyBlockField);
     key.appendChild(keyBlock);
 
+    // Create a value for the pair.
     var value = document.createElement('value');
     value.setAttribute('name', 'VALUE');
 
@@ -1292,18 +1274,26 @@ Blockly.GqlDictionaryFlydown.prototype.flydownBlocksXML_ = function() {
       value.appendChild(defaultArgument);
     }
 
+    // Create a new pair.
     var pair = document.createElement('block');
     pair.setAttribute('type', 'gql_pair');
 
+    // Set the attributes of the pair.
     var pairMutation = document.createElement('mutation');
     pairMutation.setAttribute('gql_url', this.gqlUrl);
     pairMutation.setAttribute('gql_base_type', this.gqlBaseType);
     pairMutation.setAttribute('gql_name', arg.name);
 
+    // Determine if pair value should be quoted.
+    var shouldQuote = Blockly.GraphQLBlock.shouldQuote(Blockly.GraphQLBlock.typeString(arg.type));
+    pairMutation.setAttribute('gql_quote', shouldQuote);
+
+    // Add mutation, key, and value.
     pair.appendChild(pairMutation);
     pair.appendChild(key);
     pair.appendChild(value);
 
+    // Add pair to blocks.
     blocks.push(pair);
   }
 
@@ -1392,6 +1382,8 @@ Blockly.GqlPairFlydown.prototype.flydownBlocksXML_ = function() {
     mutation.setAttribute('items', '1');
     mutation.setAttribute('gql_url', this.gqlUrl);
     mutation.setAttribute('gql_type', type);
+    mutation.setAttribute('gql_quote', Blockly.GraphQLBlock.shouldQuote(type));
+
     block.appendChild(mutation);
   }
 

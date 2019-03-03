@@ -16,12 +16,12 @@ import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.common.YaVersion;
 import com.google.appinventor.components.runtime.errors.PermissionException;
-import com.google.appinventor.components.runtime.errors.YailRuntimeError;
 import com.google.appinventor.components.runtime.util.AsynchUtil;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.FileUtil;
 import com.google.appinventor.components.runtime.util.GingerbreadUtil;
 import com.google.appinventor.components.runtime.util.JsonUtil;
+import gnu.lists.FString;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -230,20 +230,12 @@ public class GraphQL extends AndroidNonvisibleComponent implements Component {
    * @param gqlQuery     the query string to execute.
    */
   @SimpleFunction(description = "Execute a GraphQL query against the endpoint.")
-  public void GqlQuery(final String gqlQueryName, final Object gqlQuery) {
+  public void GqlQuery(final String gqlQueryName, final String gqlQuery) {
     // Method name for error handling.
     final String METHOD = "GqlQuery";
 
     // Build the post data.
-    final byte[] postData;
-
-    // Decide what to do based on the type of the query.
-    if (gqlQuery instanceof GqlSelection) {
-      final QueryBuilder builder = new QueryBuilder((GqlSelection) gqlQuery);
-      postData = buildPost(builder.getQuery(), null, builder.getVariables());
-    } else {
-      postData = buildPost(gqlQuery.toString(), null, null);
-    }
+    final byte[] postData = buildPost(gqlQuery, null, null);
 
     // Asynchronously complete request.
     AsynchUtil.runAsynchronously(new Runnable() {
@@ -483,133 +475,40 @@ public class GraphQL extends AndroidNonvisibleComponent implements Component {
     }
   }
 
-
-  private static class QueryBuilder {
-    private static final String PREFIX = "_";
-
-    private final List<String> queryTokens;
-    private final List<String> variableTokens;
-    private final Map<String, Object> variables;
-
-    private int count;
-
-    public QueryBuilder(final GqlSelection root) {
-      this.queryTokens = new ArrayList<>();
-      this.variableTokens = new ArrayList<>();
-      this.variables = new HashMap<>();
-
-      // Variable naming starts at 0.
-      this.count = 0;
-
-      // Allocate token space for variables.
-      queryTokens.add(null);
-
-      // Add opening bracket.
-      queryTokens.add("{");
-
-      // Build selection set of root.
-      for (final GqlSelection selection : root.selectionSet) {
-        build(selection);
-      }
-
-      // Add closing bracket.
-      queryTokens.add("}");
-
-      // Set first token.
-      queryTokens.set(0, root.name + "(" + join(variableTokens, ", ") + ")");
-    }
-
-    public Map<String, Object> getVariables() {
-      return variables;
-    }
-
-    public String getQuery() {
-      return join(queryTokens, " ");
-    }
-
-    private void build(final GqlSelection selection) {
-      // Handle arguments.
-      if (selection.arguments.length == 0) {
-        queryTokens.add(selection.name);
-      } else {
-        // Create a new list to store individual arguments.
-        final List<String> arguments = new ArrayList<>();
-
-        // Go through all arguments.
-        for (final GqlArgument argument : selection.arguments) {
-          // Create a new variable name.
-          final String variableName = PREFIX + count++;
-
-          // Add variable to list of arguments.
-          arguments.add(argument.name + ": $" + variableName);
-
-          // Add the variable token for root call.
-          variableTokens.add("$" + variableName + ": " + argument.type);
-
-          // Add variable value to map.
-          // TODO(bobbyluig): Fix hacky type coercion.
-          try {
-            variables.put(variableName, JsonUtil.getObjectFromJson(JsonUtil.getJsonRepresentation(argument.value)));
-          } catch (final JSONException e) {
-            throw new YailRuntimeError("Value failed to convert to JSON.", "JSON Creation Error.");
-          }
-        }
-
-        // Add the new token with the arguments.
-        queryTokens.add(selection.name + "(" + join(arguments, ", ") + ")");
-      }
-
-      // Handle non-scalar fields.
-      if (selection.selectionSet.length > 0) {
-        // Add opening bracket.
-        queryTokens.add("{");
-
-        // Build selection set of root.
-        for (final GqlSelection childSelection : selection.selectionSet) {
-          build(childSelection);
-        }
-
-        // Add closing bracket.
-        queryTokens.add("}");
-      }
-    }
-
-    private String join(final List<String> list, final String delimiter) {
-      final StringBuilder builder = new StringBuilder();
-
-      for (int i = 0; i < list.size(); i++) {
-        builder.append(list.get(i));
-
-        if (i != list.size() - 1) {
-          builder.append(delimiter);
-        }
-      }
-
-      return builder.toString();
+  // TODO(bobbyluig): Write this into the scheme runtime.
+  public static FString quote(final Object value) {
+    if (value instanceof GqlLiteral) {
+      return new FString(value.toString());
+    } else {
+      return new FString(JSONObject.quote(value.toString()));
     }
   }
 
-  public static class GqlSelection {
-    public final String name;
-    public final GqlArgument[] arguments;
-    public final GqlSelection[] selectionSet;
+  public static class GqlLiteral implements CharSequence {
+    private final String value;
 
-    public GqlSelection(final String name, final GqlArgument[] arguments, final GqlSelection[] selectionSet) {
-      this.name = name;
-      this.arguments = arguments;
-      this.selectionSet = selectionSet;
-    }
-  }
-
-  public static class GqlArgument {
-    public final String name;
-    public final String type;
-    public final Object value;
-
-    public GqlArgument(final String name, final String type, final Object value) {
-      this.name = name;
-      this.type = type;
+    public GqlLiteral(final String value) {
       this.value = value;
+    }
+
+    @Override
+    public int length() {
+      return value.length();
+    }
+
+    @Override
+    public char charAt(int index) {
+      return value.charAt(index);
+    }
+
+    @Override
+    public CharSequence subSequence(int start, int end) {
+      return value.subSequence(start, end);
+    }
+
+    @Override
+    public String toString() {
+      return value;
     }
   }
 }
