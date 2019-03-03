@@ -161,7 +161,7 @@ Blockly.GraphQLBlock.instanceBlocks = function(uid) {
 Blockly.GraphQLBlock.shouldQuote = function(typeString) {
   // Skip non-null.
   if (typeString.endsWith('!')) {
-    typeString = typeString.substring(1, typeString.length - 1);
+    typeString = typeString.substring(0, typeString.length - 1);
   }
 
   // Only scalar strings and ids should be quoted.
