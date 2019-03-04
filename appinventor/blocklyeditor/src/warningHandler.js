@@ -554,3 +554,56 @@ Blockly.WarningHandler.prototype['checkReplErrors'] = function(block) {
   }
   return false;
 };
+
+// Check if all required GraphQL arguments are filled.
+Blockly.WarningHandler.prototype['checkGraphQLArgs'] = function(block) {
+  // If schema is not yet available, do not perform the check.
+  if (!Blockly.GraphQLBlock.schemas.hasOwnProperty(block.gqlUrl)) {
+    return false;
+  }
+
+  // Fetch the schema and the type.
+  var schema = Blockly.GraphQLBlock.schemas[block.gqlUrl];
+  var type = schema.types[block.gqlBaseType];
+
+  // Build a set of the object's required arguments.
+  var requiredArguments = {};
+
+  // Filter for required arguments.
+  for (var i = 0; i < type.inputFields.length; i++) {
+    if (type.inputFields[i].type.kind === 'NON_NULL') {
+      requiredArguments[type.inputFields[i].name] = true;
+    }
+  }
+
+  // Go through all items.
+  for(var i = 0; i < block.itemCount_; i++) {
+    // Get the target pair.
+    var targetBlock = block.getInputTargetBlock('ADD' + i);
+
+    // Skip null target blocks.
+    if (!targetBlock) {
+      continue;
+    }
+
+    // Don't perform the check if anything which is not a GraphQL pair is attached. This means that the user is using
+    // advanced features at their own risk. It is better not to bother them with warnings.
+    if (targetBlock.type !== 'gql_pair') {
+      return false;
+    }
+
+    // Remove from required arguments.
+    delete requiredArguments[targetBlock.gqlName];
+  }
+
+  // Get the first remaining item and set the warning message.
+  for (var argument in requiredArguments) {
+    if (requiredArguments.hasOwnProperty(argument)) {
+      block.setWarningText('Required GraphQL argument `' + argument + '` missing.');
+      return true;
+    }
+  }
+
+  // No errors encountered.
+  return false;
+};

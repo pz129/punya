@@ -13,7 +13,7 @@ Blockly.GraphQLBlock = {};
 Blockly.GraphQLBlock.PRIMARY_COLOR = '#e535ab';
 Blockly.GraphQLBlock.SECONDARY_COLOR = '#161e26';
 
-// Constant for special internal root type. Must not be valid GraphQL name.
+// Constant for special internal root type. Must not be a valid GraphQL name.
 Blockly.GraphQLBlock.ROOT_TYPE = '[root]';
 
 // GraphQL introspection query.
@@ -670,16 +670,6 @@ Blockly.Blocks['gql'] = {
       .setCheck(['GraphQL']);
   },
 
-  // onchange: function(e) {
-  //   // Don't trigger error or warning checks on transient actions.
-  //   if (e.isTransient) {
-  //     return false;
-  //   }
-  //
-  //   // Perform error and warning checking.
-  //   return this.workspace.getWarningHandler() && this.workspace.getWarningHandler().checkErrors(this);
-  // },
-
   updateSchema: function() {
     // If there is no schema, we can't update yet.
     if (!Blockly.GraphQLBlock.schemas.hasOwnProperty(this.gqlUrl)) {
@@ -1047,6 +1037,18 @@ goog.object.extend(Blockly.Blocks['gql_dict'], {
       // Perform base type validation.
       return sourceBlock.gqlBaseType === baseType;
     }]);
+  },
+
+  warnings: [{name: 'checkGraphQLArgs'}],
+
+  onchange: function(e) {
+    // Don't trigger error or warning checks on transient actions.
+    if (e.isTransient) {
+      return false;
+    }
+
+    // Perform error and warning checking.
+    return this.workspace.getWarningHandler() && this.workspace.getWarningHandler().checkErrors(this);
   }
 });
 
