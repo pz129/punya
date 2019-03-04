@@ -526,6 +526,7 @@ Blockly.Blocks['gql_null'] = {
     this.setColour(Blockly.GraphQLBlock.PRIMARY_COLOR);
     this.appendDummyInput().appendField('null');
     this.setOutput(true, ['GraphQLNull']);
+    this.setTooltip('A GraphQL null value.');
   }
 };
 
@@ -639,6 +640,9 @@ Blockly.Blocks['gql'] = {
         this.addInput(i);
       }
     }
+
+    // Set the initial tooltip.
+    this.setTooltip('A dynamically generated GraphQL block.');
 
     // Try to perform a schema update.
     this.updateSchema();
@@ -881,6 +885,9 @@ Blockly.Blocks['gql_enum'] = {
     // The initial output type is GraphQLEnum.
     this.setOutput(true, ['GraphQLEnum']);
 
+    // Set the initial tooltip.
+    this.setTooltip('A dynamically generated GraphQL enumeration.');
+
     // Try to update the schema.
     this.updateSchema();
   },
@@ -988,6 +995,9 @@ goog.object.extend(Blockly.Blocks['gql_dict'], {
     // The output type is initially GraphQLDict.
     this.setOutput(true, ['GraphQLDict']);
 
+    // Set the tooltip.
+    this.setTooltip('A dynamically generated GraphQL dictionary.');
+
     // Try to update the schema.
     this.updateSchema();
   },
@@ -1064,6 +1074,9 @@ goog.object.extend(Blockly.Blocks['gql_pair'], {
 
     // The initial output type is GraphQLPair.
     this.setOutput(true, ['GraphQLPair']);
+
+    // Set the initial tooltip.
+    this.setTooltip('A dynamically generated GraphQL pair with the key and value provided.');
 
     // Try to update the schema.
     this.updateSchema();
@@ -1151,6 +1164,9 @@ goog.object.extend(Blockly.Blocks['gql_list'], {
 
     // The output type is initially GraphQLList.
     this.setOutput(true, ['GraphQLList']);
+
+    // Set the tooltip.
+    this.setTooltip('A dynamically generated GraphQL list.');
 
     // Try to update the schema.
     this.updateSchema();
