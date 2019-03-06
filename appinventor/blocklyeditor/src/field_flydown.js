@@ -93,6 +93,12 @@ Blockly.FieldFlydown.prototype.showEditor_ = function() {
 };
 
 Blockly.FieldFlydown.prototype.init = function(block) {
+  // Don't double initialize.
+  if (this.mouseOverWrapper_) {
+    return;
+  }
+
+  // Initialize parent.
   Blockly.FieldFlydown.superClass_.init.call(this, block);
 
   // Remove inherited field css classes ...
