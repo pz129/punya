@@ -327,6 +327,9 @@ Blockly.BlockSvg.prototype.renderHere = function(opt_bubble) {
         block.render();
       }
     }
+
+    // Need to resize workspace on changes.
+    Blockly.mainWorkspace.resizeContents();
   };
 }
 

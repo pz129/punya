@@ -323,8 +323,8 @@ Blockly.GraphQLBlock.updateSchema = function(endpoint, headers) {
       // Get the response, which is in JSON format.
       var response = JSON.parse(xhr.responseText);
 
-      // Check if there were any errors.
-      if (response.hasOwnProperty('errors')) {
+      // Check if there was data.
+      if (!response.hasOwnProperty('data')) {
         console.log('Introspection query for ' + endpoint + ' failed with GraphQL errors.', response['errors']);
         return;
       }
@@ -444,6 +444,8 @@ Blockly.GraphQLBlock.updateSchema = function(endpoint, headers) {
             block.updateSchema();
           }
         }
+      } else {
+        // TODO(bobbyluig): Schema loaded too quickly.
       }
     }
   };
@@ -802,6 +804,11 @@ Blockly.Blocks['gql'] = {
         return false;
       }
 
+      // Ensure connection to the body and not the title.
+      if (targetConnection.subtype !== Blockly.INDENTED_VALUE) {
+        return false;
+      }
+
       // Object type checking is only valid on blocks with an updated schema.
       if (sourceBlock.gqlBaseType === undefined || targetBlock.gqlBaseType === undefined) {
         return true;
@@ -950,8 +957,11 @@ Blockly.Blocks['gql_enum'] = {
 // The GraphQL dictionary type.
 Blockly.Blocks['gql_dict'] = goog.object.clone(Blockly.Blocks['dictionaries_create_with']);
 goog.object.extend(Blockly.Blocks['gql_dict'], {
+  category: undefined,
+
   addInput: function(inputNum) {
-    var input = this.appendValueInput(this.repeatingInputName + inputNum);
+    var input = this.appendValueInput(this.repeatingInputName + inputNum)
+      .setCheck(['GraphQLPair']);
 
     // Handle the first input by enabling autocompletion when possible.
     if (inputNum === 0) {
@@ -959,6 +969,11 @@ goog.object.extend(Blockly.Blocks['gql_dict'], {
         ? new Blockly.GqlDictionaryFlydown(this.gqlUrl, this.gqlBaseType)
         : Blockly.Msg.LANG_DICTIONARIES_CREATE_WITH_TITLE_MAKE_DICTIONARY;
       input.appendField(flydown, 'FLYDOWN');
+
+      // Hide on collapsed.
+      if (this.isCollapsed()) {
+        flydown.setVisible(false);
+      }
     }
 
     return input;
@@ -999,9 +1014,15 @@ goog.object.extend(Blockly.Blocks['gql_dict'], {
     }
 
     // Enable autocompletion.
+    var flydown = new Blockly.GqlDictionaryFlydown(this.gqlUrl, this.gqlBaseType);
     var input = this.getInput(this.repeatingInputName + 0);
     input.removeField('FLYDOWN');
-    input.appendField(new Blockly.GqlDictionaryFlydown(this.gqlUrl, this.gqlBaseType), 'FLYDOWN');
+    input.appendField(flydown, 'FLYDOWN');
+
+    // Hide on collapsed.
+    if (this.isCollapsed()) {
+      flydown.setVisible(false);
+    }
 
     // Set the output to check for valid attachment point.
     this.setOutput(true, [function(sourceConnection, targetConnection) {
@@ -1055,6 +1076,8 @@ goog.object.extend(Blockly.Blocks['gql_dict'], {
 // The GraphQL pair type.
 Blockly.Blocks['gql_pair'] = goog.object.clone(Blockly.Blocks['pair']);
 goog.object.extend(Blockly.Blocks['gql_pair'], {
+  category: undefined,
+
   mutationToDom: function() {
     var mutation = document.createElement('mutation');
 
@@ -1102,10 +1125,16 @@ goog.object.extend(Blockly.Blocks['gql_pair'], {
     var input = this.getInput('VALUE');
     var typeString = Blockly.GraphQLBlock.typeString(inputField.type);
     var valueName = input.fieldRow[0].getText();
+    var flydown = new Blockly.GqlPairFlydown(valueName, this.gqlUrl, typeString);
     input.removeField(input.fieldRow[0].name);
-    input.appendField(new Blockly.GqlPairFlydown(valueName, this.gqlUrl, typeString))
+    input.appendField(flydown)
       .setAlign(Blockly.ALIGN_RIGHT)
       .setCheck(Blockly.GraphQLBlock.gqlTypeToBlocklyType(inputField.type));
+
+    // Hide on collapsed.
+    if (this.isCollapsed()) {
+      flydown.setVisible(false);
+    }
 
     // Set the appropriate documentation.
     this.setTooltip(inputField.description);
@@ -1130,6 +1159,8 @@ goog.object.extend(Blockly.Blocks['gql_pair'], {
 // The GraphQL list type.
 Blockly.Blocks['gql_list'] = goog.object.clone(Blockly.Blocks['lists_create_with']);
 goog.object.extend(Blockly.Blocks['gql_list'], {
+  category: undefined,
+
   addInput: function(inputNum) {
     var input = this.appendValueInput(this.repeatingInputName + inputNum);
 
@@ -1139,6 +1170,11 @@ goog.object.extend(Blockly.Blocks['gql_list'], {
         ? new Blockly.GqlListFlydown(this.gqlUrl, this.gqlType)
         : Blockly.Msg.LANG_LISTS_CREATE_WITH_TITLE_MAKE_LIST;
       input.appendField(flydown, 'FLYDOWN');
+
+      // Hide on collapsed.
+      if (this.isCollapsed()) {
+        flydown.setVisible(false);
+      }
     }
 
     return input;
@@ -1181,9 +1217,16 @@ goog.object.extend(Blockly.Blocks['gql_list'], {
     }
 
     // Enable autocompletion.
+    // TODO(bobbyluig): Set output type check.
+    var flydown = new Blockly.GqlListFlydown(this.gqlUrl, this.gqlType);
     var input = this.getInput(this.repeatingInputName + 0);
     input.removeField('FLYDOWN');
-    input.appendField(new Blockly.GqlListFlydown(this.gqlUrl, this.gqlType), 'FLYDOWN');
+    input.appendField(flydown, 'FLYDOWN');
+
+    // Hide on collapsed.
+    if (this.isCollapsed()) {
+      flydown.setVisible(false);
+    }
 
     // Set the output to check for valid attachment point.
     this.setOutput(true, [function(sourceConnection, targetConnection) {
@@ -1344,7 +1387,7 @@ Blockly.GqlPairFlydown.prototype.flydownBlocksXML_ = function() {
   var type = this.gqlType;
   var schema = Blockly.GraphQLBlock.schemas[this.gqlUrl];
 
-  // Remove trailing nullity identifer if it exists.
+  // Remove trailing nullity identifier if it exists.
   if (type.endsWith('!')) {
     type = type.substring(0, type.length - 1);
   }
