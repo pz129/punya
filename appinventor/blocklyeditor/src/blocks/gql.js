@@ -464,17 +464,27 @@ Blockly.GraphQLBlock.updateSchema = function(endpoint, headers) {
   xhr.send(JSON.stringify(data));
 };
 
-// Convert a type to its corresponding Blockly type.
-Blockly.GraphQLBlock.gqlTypeToBlocklyType = function(type) {
+// Convert a GraphQL type string to its corresponding Blockly type.
+Blockly.GraphQLBlock.blocklyTypes = function(gqlUrl, typeString) {
   // Keep track of valid types.
   var types = [];
 
   // Handle nullity.
-  if (type.kind === 'NON_NULL') {
-    type = type.ofType;
+  if (typeString.endsWith('!')) {
+    typeString = typeString.substring(0, typeString.length - 1);
   } else {
     types.push('GraphQLNull');
   }
+
+  // Handle lists.
+  if (typeString.startsWith('[') && typeString.endsWith(']')) {
+    types.push('GraphQLList');
+    return types;
+  }
+
+  // Fetch the type.
+  var schema = Blockly.GraphQLBlock.schemas[gqlUrl];
+  var type = schema.types[typeString];
 
   // Handle non-scalar types.
   switch (type.kind) {
@@ -484,9 +494,6 @@ Blockly.GraphQLBlock.gqlTypeToBlocklyType = function(type) {
     case 'OBJECT':
     case 'INPUT_OBJECT':
       types.push('GraphQLDict');
-      break;
-    case 'LIST':
-      types.push('GraphQLList');
       break;
     case 'SCALAR':
       switch (type.name) {
@@ -1129,7 +1136,7 @@ goog.object.extend(Blockly.Blocks['gql_pair'], {
     input.removeField(input.fieldRow[0].name);
     input.appendField(flydown)
       .setAlign(Blockly.ALIGN_RIGHT)
-      .setCheck(Blockly.GraphQLBlock.gqlTypeToBlocklyType(inputField.type));
+      .setCheck(Blockly.GraphQLBlock.blocklyTypes(this.gqlUrl, typeString));
 
     // Hide on collapsed.
     if (this.isCollapsed()) {
@@ -1217,11 +1224,11 @@ goog.object.extend(Blockly.Blocks['gql_list'], {
     }
 
     // Enable autocompletion.
-    // TODO(bobbyluig): Set output type check.
     var flydown = new Blockly.GqlListFlydown(this.gqlUrl, this.gqlType);
     var input = this.getInput(this.repeatingInputName + 0);
     input.removeField('FLYDOWN');
-    input.appendField(flydown, 'FLYDOWN');
+    input.appendField(flydown, 'FLYDOWN')
+      .setCheck(Blockly.GraphQLBlock.blocklyTypes(this.gqlUrl, this.gqlType));
 
     // Hide on collapsed.
     if (this.isCollapsed()) {
