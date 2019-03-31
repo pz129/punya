@@ -762,7 +762,7 @@ Blockly.Blocks['gql'] = {
       var description = parentType.fields[this.gqlName].description;
 
       // Update description if available.
-      if (description !== null) {
+      if (description) {
         this.setTooltip(description);
       }
     }
@@ -1144,7 +1144,9 @@ goog.object.extend(Blockly.Blocks['gql_pair'], {
     }
 
     // Set the appropriate documentation.
-    this.setTooltip(inputField.description);
+    if (inputField.description) {
+      this.setTooltip(inputField.description);
+    }
 
     // Set the output to check for valid attachment point.
     this.setOutput(true, [function(sourceConnection, targetConnection) {
