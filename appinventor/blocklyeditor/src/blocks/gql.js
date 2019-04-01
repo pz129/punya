@@ -703,6 +703,7 @@ Blockly.Blocks['gql'] = {
       var block = workspace.newBlock(type);
       block.initSvg();
       block.render();
+      return block;
     };
 
     // Callback to generate getter.
@@ -740,8 +741,11 @@ Blockly.Blocks['gql'] = {
         // Always need to fetch the field from the dictionary.
         var dictBlock = newBlock('dictionary_lookup');
         var keyBlock = newBlock('text');
+        var notFoundBlock = newBlock('text');
         keyBlock.getField('TEXT').setText(tuple[0]);
+        notFoundBlock.getField('TEXT').setText('not found');
         dictBlock.getInput('KEY').connection.connect(keyBlock.outputConnection);
+        dictBlock.getInput('NOTFOUND').connection.connect(notFoundBlock.outputConnection);
 
         // Set the current block.
         var currentBlock = dictBlock;
@@ -765,8 +769,7 @@ Blockly.Blocks['gql'] = {
         // Select the block.
         previousBlock.select();
 
-        // Attempt to center the definition block, but preserve a minimum X, Y position so that
-        // the definition of the block always appears on screen for visually large procedures
+        // Attempt to center the generated block.
         // TODO(bobbyluig): Fix duplicate code.
         var event = new AI.Events.WorkspaceMove(workspace.id);
         var xy = previousBlock.getRelativeToSurfaceXY();
@@ -774,9 +777,7 @@ Blockly.Blocks['gql'] = {
         var metrics = previousBlock.workspace.getMetrics();
         var minTop = xy.y - metrics.contentTop;
         var minLeft = xy.x - metrics.contentLeft;
-        var midX = minLeft + (wh.width - metrics.viewWidth) / 2;
-        var midY = minTop + (wh.height - metrics.viewHeight) / 2;
-        previousBlock.workspace.scrollbar.set(Math.min(minLeft, midX), Math.min(minTop, midY));
+        previousBlock.workspace.scrollbar.set(minLeft, minTop);
         event.recordNew();
         Blockly.Events.fire(event);
         workspace.getParentSvg().parentElement.focus();
