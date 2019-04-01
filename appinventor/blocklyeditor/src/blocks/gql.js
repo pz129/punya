@@ -689,14 +689,9 @@ Blockly.Blocks['gql'] = {
     var option = {enabled: true};
     option.text = 'Generate Getter';
 
-    // Get the parent block and this workspace.
-    var parentBlock = this.getParent();
+    // Alias this block block and this workspace.
+    var thisBlock = this;
     var workspace = this.workspace;
-
-    // If the parent block is not of the correct type, there is nothing to do.
-    if (!parentBlock || parentBlock.type !== 'gql') {
-      return options;
-    }
 
     // Function to create and render.
     var newBlock = function(type) {
@@ -712,10 +707,10 @@ Blockly.Blocks['gql'] = {
       var path = [];
 
       // Fetch the schema (assuming fixed schema for path).
-      var schema = Blockly.GraphQLBlock.schemas[parentBlock.gqlUrl];
+      var schema = Blockly.GraphQLBlock.schemas[thisBlock.gqlUrl];
 
       // Continue until we reach a non-GraphQL block or a root block.
-      var block = parentBlock;
+      var block = thisBlock;
       while (block && block.type === 'gql' && block.gqlParent !== Blockly.GraphQLBlock.ROOT_TYPE) {
         // Skip fragments.
         if (!block.gqlParent) {
@@ -760,7 +755,7 @@ Blockly.Blocks['gql'] = {
         var currentBlock = dictBlock;
 
         // Fetch an index from the list if necessary.
-        if (tuple[1]) {
+        if (tuple[1] && path.length > 1) {
           var listBlock = newBlock('lists_select_item');
           var numBlock = newBlock('math_number');
           listBlock.getInput('NUM').connection.connect(numBlock.outputConnection);
