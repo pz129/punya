@@ -766,21 +766,14 @@ Blockly.Blocks['gql'] = {
 
       // Select the block and center.
       if (previousBlock) {
+        // Center the generated block.
+        var metrics = previousBlock.workspace.getMetrics();
+        var scale = previousBlock.workspace.scale;
+        previousBlock.moveBy(metrics.viewLeft / scale, metrics.viewTop / scale);
+        workspace.getParentSvg().parentElement.focus();
+
         // Select the block.
         previousBlock.select();
-
-        // Attempt to center the generated block.
-        // TODO(bobbyluig): Fix duplicate code.
-        var event = new AI.Events.WorkspaceMove(workspace.id);
-        var xy = previousBlock.getRelativeToSurfaceXY();
-        var wh = previousBlock.getHeightWidth();
-        var metrics = previousBlock.workspace.getMetrics();
-        var minTop = xy.y - metrics.contentTop;
-        var minLeft = xy.x - metrics.contentLeft;
-        previousBlock.workspace.scrollbar.set(minLeft, minTop);
-        event.recordNew();
-        Blockly.Events.fire(event);
-        workspace.getParentSvg().parentElement.focus();
       }
     };
 
