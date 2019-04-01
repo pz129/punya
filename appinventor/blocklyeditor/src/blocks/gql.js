@@ -717,6 +717,12 @@ Blockly.Blocks['gql'] = {
       // Continue until we reach a non-GraphQL block or a root block.
       var block = parentBlock;
       while (block && block.type === 'gql' && block.gqlParent !== Blockly.GraphQLBlock.ROOT_TYPE) {
+        // Skip fragments.
+        if (!block.gqlParent) {
+          block = block.getParent();
+          continue;
+        }
+
         // Get the type of the block.
         var parentType = schema.types[block.gqlParent];
         var type = parentType.fields[block.gqlName].type;
@@ -731,6 +737,9 @@ Blockly.Blocks['gql'] = {
         // Move to parent block.
         block = block.getParent();
       }
+
+      // Begin group.
+      Blockly.Events.setGroup(true);
 
       // Build path into blocks.
       var previousBlock = null;
@@ -776,6 +785,9 @@ Blockly.Blocks['gql'] = {
         previousBlock.select();
       }
     };
+
+    // End group.
+    Blockly.Events.setGroup(false);
 
     // Add option.
     options.push(option);
