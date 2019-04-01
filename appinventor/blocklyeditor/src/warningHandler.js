@@ -593,7 +593,8 @@ Blockly.WarningHandler.prototype['checkGraphQLArgs'] = function(block) {
     }
 
     // Remove from required arguments.
-    delete requiredArguments[targetBlock.gqlName];
+    var enumBlock = targetBlock.getInputTargetBlock('KEY');
+    delete requiredArguments[enumBlock.getGqlValue()];
   }
 
   // Get the first remaining item and set the warning message.

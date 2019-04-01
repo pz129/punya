@@ -850,7 +850,8 @@ Blockly.Blocks['gql'] = {
         var parentType = schema.types[sourceBlock.gqlParent];
 
         // Check for field validity.
-        if (sourceBlock.gqlParent !== targetBlock.gqlBaseType || !parentType.fields.hasOwnProperty(sourceBlock.gqlName)) {
+        if (sourceBlock.gqlParent !== targetBlock.gqlBaseType ||
+          !parentType.fields.hasOwnProperty(sourceBlock.gqlName)) {
           return false;
         }
       }
@@ -900,28 +901,74 @@ Blockly.Blocks['gql_enum'] = {
     return (this.dropdown) ? this.dropdown.getValue() : this.gqlValue;
   },
 
-  getValues: function() {
-    // Fetch the schema and types. This will only ever be called when the dropdown has been created.
-    var schema = Blockly.GraphQLBlock.schemas[this.gqlUrl];
-    var type = schema.types[this.gqlBaseType];
-
-    // Get all of the enum values.
-    var values = [];
-    for (var i = 0, value; value = type.enumValues[i]; i++) {
-      values.push([value.name, value.name]);
-    }
-
-    return values;
-  },
-
   updateSchema: function() {
     // If there is no schema, we can't update yet.
     if (!Blockly.GraphQLBlock.schemas.hasOwnProperty(this.gqlUrl)) {
       return;
     }
 
-    // Create a dropdown and set the default value.
-    this.dropdown = new Blockly.FieldDropdown(this.getValues.bind(this));
+    // Fetch all values in the enum.
+    var schema = Blockly.GraphQLBlock.schemas[this.gqlUrl];
+    var type = schema.types[this.gqlBaseType];
+    var enumValues = (type.kind === 'ENUM') ? type.enumValues : type.inputFields;
+
+    // Function to get all values for the dropdown.
+    var getValues = function() {
+      var values = [];
+      for (var i = 0, value; value = enumValues[i]; i++) {
+        values.push([value.name, value.name]);
+      }
+      return values;
+    };
+
+    // Function to update the parent block in the form of a validator.
+    var validate = function(parent, gqlName) {
+      // Locate the input field.
+      var inputField = goog.array.find(type.inputFields, function(item) {
+        return item.name === gqlName;
+      });
+
+      // Enable value autocompletion.
+      var input = parent.getInput('VALUE');
+      var typeString = Blockly.GraphQLBlock.typeString(inputField.type);
+      var valueName = input.fieldRow[0].getText();
+      var flydown = new Blockly.GqlPairFlydown(valueName, parent.gqlUrl, typeString);
+      input.removeField(input.fieldRow[0].name);
+      input.appendField(flydown)
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .setCheck(Blockly.GraphQLBlock.blocklyTypes(parent.gqlUrl, typeString));
+
+      // Determine if pair value should be quoted.
+      parent.gqlQuote = Blockly.GraphQLBlock.shouldQuote(typeString);
+
+      // Hide on collapsed.
+      if (parent.isCollapsed()) {
+        flydown.setVisible(false);
+      }
+
+      // Set the appropriate documentation.
+      if (inputField.description) {
+        parent.setTooltip(inputField.description);
+      }
+
+      // Always return since this is a validator.
+      return gqlName;
+    };
+
+    // Create a dropdown depending on whether the enum is for an input field.
+    if (type.kind === 'ENUM') {
+      this.dropdown = new Blockly.FieldDropdown(getValues);
+    } else {
+      // Alias this block.
+      var thisBlock = this;
+
+      // Optimizing dropdown that mutates parent pair on change.
+      this.dropdown = new Blockly.FieldDropdown(getValues, function(gqlName) {
+        validate(thisBlock.getParent(), gqlName);
+      });
+    }
+
+    // Set the default value for the dropdown.
     this.dropdown.setValue(this.gqlValue);
 
     // Replace the field text with the dropdown.
@@ -930,34 +977,54 @@ Blockly.Blocks['gql_enum'] = {
     input.appendField(this.dropdown, 'DROPDOWN');
 
     // Set the output to check for valid attachment point.
-    this.setOutput(true, [function(sourceConnection, targetConnection) {
-      // Get the source and target blocks.
-      var sourceBlock = sourceConnection.sourceBlock_;
-      var targetBlock = targetConnection.sourceBlock_;
+    if (type.kind === 'ENUM') {
+      // Standard enum type check.
+      this.setOutput(true, [function(sourceConnection, targetConnection) {
+        // Get the source and target blocks.
+        var sourceBlock = sourceConnection.sourceBlock_;
+        var targetBlock = targetConnection.sourceBlock_;
 
-      // Degrade to a normal check for non-specific parent blocks.
-      if (targetBlock.type !== 'gql_pair') {
-        return targetConnection.check_.indexOf('GraphQLEnum') !== -1;
-      }
+        // Degrade to a normal check for non-specific parent blocks.
+        if (targetBlock.type !== 'gql_pair') {
+          return targetConnection.check_.indexOf('GraphQLEnum') !== -1;
+        }
 
-      // Perform endpoint validation.
-      if (sourceBlock.gqlUrl !== targetBlock.gqlUrl) {
-        return false;
-      }
+        // Perform endpoint validation.
+        if (sourceBlock.gqlUrl !== targetBlock.gqlUrl) {
+          return false;
+        }
 
-      // Fetch the parent input field.
-      var schema = Blockly.GraphQLBlock.schemas[targetBlock.gqlUrl];
-      var type = schema.types[targetBlock.gqlBaseType];
-      var inputField = goog.array.find(type.inputFields, function(item) {
-        return item.name === targetBlock.gqlName;
-      });
+        // Fetch the parent input field.
+        var schema = Blockly.GraphQLBlock.schemas[targetBlock.gqlUrl];
+        var type = schema.types[targetBlock.gqlBaseType];
+        var inputField = goog.array.find(type.inputFields, function(item) {
+          return item.name === targetBlock.gqlName;
+        });
 
-      // Perform type validation.
-      var typeString = (inputField.type.kind === 'NON_NULL')
-        ? Blockly.GraphQLBlock.typeString(inputField.type.ofType)
-        : Blockly.GraphQLBlock.typeString(inputField.type);
-      return typeString === sourceBlock.gqlBaseType;
-    }]);
+        // Perform type validation.
+        var typeString = (inputField.type.kind === 'NON_NULL')
+          ? Blockly.GraphQLBlock.typeString(inputField.type.ofType)
+          : Blockly.GraphQLBlock.typeString(inputField.type);
+        return typeString === sourceBlock.gqlBaseType;
+      }]);
+    } else {
+      // Fixed enum key. Use the output check as a mechanism to ensure correct initialization of autocompletion.
+      // TODO(bobbyluig): Fix this hack.
+      this.setOutput(true, [function(sourceConnection, targetConnection) {
+        // Get the source and target blocks.
+        var sourceBlock = sourceConnection.sourceBlock_;
+        var targetBlock = targetConnection.sourceBlock_;
+
+        // Initialize autocompletion.
+        validate(targetBlock, sourceBlock.gqlValue);
+
+        // Eliminate the check once the block is connected.
+        sourceBlock.setOutput(true);
+
+        // The fixed enum cannot be created or attached by the user.
+        return true;
+      }]);
+    }
   }
 };
 
@@ -1091,7 +1158,6 @@ goog.object.extend(Blockly.Blocks['gql_pair'], {
     // Set attributes, where the base type is the parent type.
     mutation.setAttribute('gql_url', this.gqlUrl);
     mutation.setAttribute('gql_base_type', this.gqlBaseType);
-    mutation.setAttribute('gql_name', this.gqlName);
     mutation.setAttribute('gql_quote', this.gqlQuote);
 
     return mutation;
@@ -1101,8 +1167,10 @@ goog.object.extend(Blockly.Blocks['gql_pair'], {
     // Get the attributes.
     this.gqlUrl = xmlElement.getAttribute('gql_url');
     this.gqlBaseType = xmlElement.getAttribute('gql_base_type');
-    this.gqlName = xmlElement.getAttribute('gql_name');
     this.gqlQuote = xmlElement.getAttribute('gql_quote') === 'true';
+
+    // Allow only enum keys.
+    this.getInput('KEY').setCheck(['GraphQLEnum']);
 
     // The initial output type is GraphQLPair.
     this.setOutput(true, ['GraphQLPair']);
@@ -1118,34 +1186,6 @@ goog.object.extend(Blockly.Blocks['gql_pair'], {
     // If there is no schema, we can't update yet.
     if (!Blockly.GraphQLBlock.schemas.hasOwnProperty(this.gqlUrl)) {
       return;
-    }
-
-    // Locate the input field.
-    var schema = Blockly.GraphQLBlock.schemas[this.gqlUrl];
-    var type = schema.types[this.gqlBaseType];
-    var gqlName = this.gqlName;
-    var inputField = goog.array.find(type.inputFields, function(item) {
-      return item.name === gqlName;
-    });
-
-    // Enable value autocompletion.
-    var input = this.getInput('VALUE');
-    var typeString = Blockly.GraphQLBlock.typeString(inputField.type);
-    var valueName = input.fieldRow[0].getText();
-    var flydown = new Blockly.GqlPairFlydown(valueName, this.gqlUrl, typeString);
-    input.removeField(input.fieldRow[0].name);
-    input.appendField(flydown)
-      .setAlign(Blockly.ALIGN_RIGHT)
-      .setCheck(Blockly.GraphQLBlock.blocklyTypes(this.gqlUrl, typeString));
-
-    // Hide on collapsed.
-    if (this.isCollapsed()) {
-      flydown.setVisible(false);
-    }
-
-    // Set the appropriate documentation.
-    if (inputField.description) {
-      this.setTooltip(inputField.description);
     }
 
     // Set the output to check for valid attachment point.
@@ -1316,20 +1356,20 @@ Blockly.GqlDictionaryFlydown.prototype.flydownBlocksXML_ = function() {
     var key = document.createElement('value');
     key.setAttribute('name', 'KEY');
 
-    // Create a fixed string block as the key.
+    // Create an attached enum block as the key, but allow editing.
     var keyBlock = document.createElement('block');
-    keyBlock.setAttribute('type', 'text');
-    keyBlock.setAttribute('editable', 'false');
+    keyBlock.setAttribute('type', 'gql_enum');
     keyBlock.setAttribute('deletable', 'false');
     keyBlock.setAttribute('movable', 'false');
 
-    // Set the name of the key.
-    var keyBlockField = document.createElement('field');
-    keyBlockField.setAttribute('name', 'TEXT');
-    keyBlockField.innerText = arg.name;
+    // Set the properties of the key.
+    var keyBlockMutation = document.createElement('mutation');
+    keyBlockMutation.setAttribute('gql_url', this.gqlUrl);
+    keyBlockMutation.setAttribute('gql_base_type', this.gqlBaseType);
+    keyBlockMutation.setAttribute('gql_value', arg.name);
 
     // Append key.
-    keyBlock.appendChild(keyBlockField);
+    keyBlock.appendChild(keyBlockMutation);
     key.appendChild(keyBlock);
 
     // Create a value for the pair.
@@ -1352,11 +1392,6 @@ Blockly.GqlDictionaryFlydown.prototype.flydownBlocksXML_ = function() {
     var pairMutation = document.createElement('mutation');
     pairMutation.setAttribute('gql_url', this.gqlUrl);
     pairMutation.setAttribute('gql_base_type', this.gqlBaseType);
-    pairMutation.setAttribute('gql_name', arg.name);
-
-    // Determine if pair value should be quoted.
-    var shouldQuote = Blockly.GraphQLBlock.shouldQuote(Blockly.GraphQLBlock.typeString(arg.type));
-    pairMutation.setAttribute('gql_quote', shouldQuote);
 
     // Add mutation, key, and value.
     pair.appendChild(pairMutation);
