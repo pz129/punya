@@ -221,8 +221,6 @@ Blockly.Yail['gql'] = function() {
   // Generate code from as a string join.
   var code = gqlJoin(combination);
 
-
-  console.log(code);
   // Return code.
   return [code, Blockly.Yail.ORDER_ATOMIC];
 };

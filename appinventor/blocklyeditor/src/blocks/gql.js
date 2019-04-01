@@ -679,6 +679,114 @@ Blockly.Blocks['gql'] = {
       .setCheck(['GraphQL']);
   },
 
+  customContextMenu: function(options) {
+    // If there is no schema, don't add the custom context menu.
+    if (!Blockly.GraphQLBlock.schemas.hasOwnProperty(this.gqlUrl)) {
+      return options;
+    }
+
+    // Properties for getter generation.
+    var option = {enabled: true};
+    option.text = 'Generate Getter';
+
+    // Get the parent block and this workspace.
+    var parentBlock = this.getParent();
+    var workspace = this.workspace;
+
+    // If the parent block is not of the correct type, there is nothing to do.
+    if (!parentBlock || parentBlock.type !== 'gql') {
+      return options;
+    }
+
+    // Function to create and render.
+    var newBlock = function(type) {
+      var block = workspace.newBlock(type);
+      block.initSvg();
+      block.render();
+    };
+
+    // Callback to generate getter.
+    option.callback = function() {
+      // Keep track of the path as a list of tuples in the form of (name, isList).
+      var path = [];
+
+      // Fetch the schema (assuming fixed schema for path).
+      var schema = Blockly.GraphQLBlock.schemas[parentBlock.gqlUrl];
+
+      // Continue until we reach a non-GraphQL block or a root block.
+      var block = parentBlock;
+      while (block && block.type === 'gql' && block.gqlParent !== Blockly.GraphQLBlock.ROOT_TYPE) {
+        // Get the type of the block.
+        var parentType = schema.types[block.gqlParent];
+        var type = parentType.fields[block.gqlName].type;
+
+        // Determine whether the type is a list.
+        type = (type.kind === 'NON_NULL') ? type.ofType : type;
+        var isList = (type.kind === 'LIST');
+
+        // Add to path.
+        path.push([block.gqlName, isList]);
+
+        // Move to parent block.
+        block = block.getParent();
+      }
+
+      // Build path into blocks.
+      var previousBlock = null;
+      while (path.length > 0) {
+        // Pop the last tuple.
+        var tuple = path.pop();
+
+        // Always need to fetch the field from the dictionary.
+        var dictBlock = newBlock('dictionary_lookup');
+        var keyBlock = newBlock('text');
+        keyBlock.getField('TEXT').setText(tuple[0]);
+        dictBlock.getInput('KEY').connection.connect(keyBlock.outputConnection);
+
+        // Set the current block.
+        var currentBlock = dictBlock;
+
+        // Fetch an index from the list if necessary.
+        if (tuple[1]) {
+          var listBlock = newBlock('lists_select_item');
+          var numBlock = newBlock('math_number');
+          listBlock.getInput('NUM').connection.connect(numBlock.outputConnection);
+          listBlock.getInput('LIST').connection.connect(dictBlock.outputConnection);
+          currentBlock = listBlock;
+        }
+
+        // Connect previous block to current block and update previous block.
+        previousBlock && dictBlock.getInput('DICT').connection.connect(previousBlock.outputConnection);
+        previousBlock = currentBlock;
+      }
+
+      // Select the block and center.
+      if (previousBlock) {
+        // Select the block.
+        previousBlock.select();
+
+        // Attempt to center the definition block, but preserve a minimum X, Y position so that
+        // the definition of the block always appears on screen for visually large procedures
+        // TODO(bobbyluig): Fix duplicate code.
+        var event = new AI.Events.WorkspaceMove(workspace.id);
+        var xy = previousBlock.getRelativeToSurfaceXY();
+        var wh = previousBlock.getHeightWidth();
+        var metrics = previousBlock.workspace.getMetrics();
+        var minTop = xy.y - metrics.contentTop;
+        var minLeft = xy.x - metrics.contentLeft;
+        var midX = minLeft + (wh.width - metrics.viewWidth) / 2;
+        var midY = minTop + (wh.height - metrics.viewHeight) / 2;
+        previousBlock.workspace.scrollbar.set(Math.min(minLeft, midX), Math.min(minTop, midY));
+        event.recordNew();
+        Blockly.Events.fire(event);
+        workspace.getParentSvg().parentElement.focus();
+      }
+    };
+
+    // Add option.
+    options.push(option);
+  },
+
   updateSchema: function() {
     // If there is no schema, we can't update yet.
     if (!Blockly.GraphQLBlock.schemas.hasOwnProperty(this.gqlUrl)) {
