@@ -135,6 +135,7 @@
   <li><a href="#LinkedDataForm">LinkedDataForm</a></li>
   <li><a href="#LinkedDataListPicker">LinkedDataListPicker</a></li>
   <li><a href="#Reasoner">Reasoner</a></li>
+  <li><a href="#SOLID">SOLID</a></li>
 </ul>
 
 <h2 id="LinkedData">LinkedData</h2>
@@ -446,6 +447,49 @@
   <dd>Runs the reasoner in forward chaining model to derive conclusions. On success, the
  <a href="#Reasoner.ReasoningComplete"><code class="highlighter-rouge">ReasoningComplete</code></a> event will run. <a href="#Reasoner.ErrorOccurred"><code class="highlighter-rouge">ErrorOccurred</code></a> event will run if reasoning
  fails.</dd>
+</dl>
+
+<h2 id="SOLID">SOLID</h2>
+
+<p>Component for SOLID</p>
+
+<h3 id="SOLID-Properties">Properties</h3>
+
+<dl class="properties">
+  <dt id="SOLID.Authenticated" class="boolean ro bo"><em>Authenticated</em></dt>
+  <dd>Property for Authenticated</dd>
+  <dt id="SOLID.CacheAuthentication" class="boolean"><em>CacheAuthentication</em></dt>
+  <dd>Property for CacheAuthentication</dd>
+  <dt id="SOLID.Name" class="text ro bo"><em>Name</em></dt>
+  <dd>Property for Name</dd>
+  <dt id="SOLID.WebID" class="text"><em>WebID</em></dt>
+  <dd>Property for WebID</dd>
+</dl>
+
+<h3 id="SOLID-Events">Events</h3>
+
+<p class="events">None</p>
+
+<h3 id="SOLID-Methods">Methods</h3>
+
+<dl class="methods">
+  <dt id="SOLID.GetLangStatements" class="method returns list"><i></i> GetLangStatements(<em class="any">subject</em>,<em class="any">predicate</em>,<em class="any">object</em>,<em class="any">lang</em>)</dt>
+  <dd>Method for GetLangStatements</dd>
+  <dt id="SOLID.GetStatements" class="method returns list"><i></i> GetStatements(<em class="any">subject</em>,<em class="any">predicate</em>,<em class="any">object</em>)</dt>
+  <dd>Get statements as a list of triples from the knowledge base. Each argument can either be false
+ or a string. False is treated as a wildcard. Strings are interpreted as URIs.</dd>
+  <dt id="SOLID.RemoveDataStatement" class="method"><i></i> RemoveDataStatement(<em class="text">subject</em>,<em class="text">property</em>,<em class="text">value</em>,<em class="text">type</em>)</dt>
+  <dd>Method for RemoveDataStatement</dd>
+  <dt id="SOLID.RemoveObjectStatement" class="method"><i></i> RemoveObjectStatement(<em class="text">subject</em>,<em class="text">property</em>,<em class="text">object</em>)</dt>
+  <dd>Method for RemoveObjectStatement</dd>
+  <dt id="SOLID.RemoveProperty" class="method"><i></i> RemoveProperty(<em class="text">subject</em>,<em class="text">property</em>)</dt>
+  <dd>Method for RemoveProperty</dd>
+  <dt id="SOLID.SaveForm" class="method"><i></i> SaveForm(<em class="component">form</em>)</dt>
+  <dd>Method for SaveForm</dd>
+  <dt id="SOLID.SetDataProperty" class="method"><i></i> SetDataProperty(<em class="text">subject</em>,<em class="text">property</em>,<em class="text">value</em>,<em class="text">type</em>)</dt>
+  <dd>Method for SetDataProperty</dd>
+  <dt id="SOLID.SetObjectProperty" class="method"><i></i> SetObjectProperty(<em class="text">subject</em>,<em class="text">property</em>,<em class="text">object</em>)</dt>
+  <dd>Method for SetObjectProperty</dd>
 </dl>
 
 </article>

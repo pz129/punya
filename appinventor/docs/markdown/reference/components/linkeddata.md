@@ -12,6 +12,7 @@ Table of Contents:
 * [LinkedDataForm](#LinkedDataForm)
 * [LinkedDataListPicker](#LinkedDataListPicker)
 * [Reasoner](#Reasoner)
+* [SOLID](#SOLID)
 
 ## LinkedData  {#LinkedData}
 
@@ -413,3 +414,60 @@ The <code>Reasoner</code> component derives statements from the contents of a
 : Runs the reasoner in forward chaining model to derive conclusions. On success, the
  [`ReasoningComplete`](#Reasoner.ReasoningComplete) event will run. [`ErrorOccurred`](#Reasoner.ErrorOccurred) event will run if reasoning
  fails.
+
+## SOLID  {#SOLID}
+
+Component for SOLID
+
+
+
+### Properties  {#SOLID-Properties}
+
+{:.properties}
+
+{:id="SOLID.Authenticated" .boolean .ro .bo} *Authenticated*
+: Property for Authenticated
+
+{:id="SOLID.CacheAuthentication" .boolean} *CacheAuthentication*
+: Property for CacheAuthentication
+
+{:id="SOLID.Name" .text .ro .bo} *Name*
+: Property for Name
+
+{:id="SOLID.WebID" .text} *WebID*
+: Property for WebID
+
+### Events  {#SOLID-Events}
+
+{:.events}
+None
+
+
+### Methods  {#SOLID-Methods}
+
+{:.methods}
+
+{:id="SOLID.GetLangStatements" class="method returns list"} <i/> GetLangStatements(*subject*{:.any},*predicate*{:.any},*object*{:.any},*lang*{:.any})
+: Method for GetLangStatements
+
+{:id="SOLID.GetStatements" class="method returns list"} <i/> GetStatements(*subject*{:.any},*predicate*{:.any},*object*{:.any})
+: Get statements as a list of triples from the knowledge base. Each argument can either be false
+ or a string. False is treated as a wildcard. Strings are interpreted as URIs.
+
+{:id="SOLID.RemoveDataStatement" class="method"} <i/> RemoveDataStatement(*subject*{:.text},*property*{:.text},*value*{:.text},*type*{:.text})
+: Method for RemoveDataStatement
+
+{:id="SOLID.RemoveObjectStatement" class="method"} <i/> RemoveObjectStatement(*subject*{:.text},*property*{:.text},*object*{:.text})
+: Method for RemoveObjectStatement
+
+{:id="SOLID.RemoveProperty" class="method"} <i/> RemoveProperty(*subject*{:.text},*property*{:.text})
+: Method for RemoveProperty
+
+{:id="SOLID.SaveForm" class="method"} <i/> SaveForm(*form*{:.component})
+: Method for SaveForm
+
+{:id="SOLID.SetDataProperty" class="method"} <i/> SetDataProperty(*subject*{:.text},*property*{:.text},*value*{:.text},*type*{:.text})
+: Method for SetDataProperty
+
+{:id="SOLID.SetObjectProperty" class="method"} <i/> SetObjectProperty(*subject*{:.text},*property*{:.text},*object*{:.text})
+: Method for SetObjectProperty

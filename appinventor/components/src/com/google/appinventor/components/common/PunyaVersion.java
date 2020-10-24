@@ -4,4 +4,6 @@ public class PunyaVersion {
   public static final int PUNYA_VERSION = 1;
 
   public static final int REASONER_COMPONENT_VERSION = 1;
+
+  public static final int SOLID_COMPONENT_VERSION = 1;
 }

@@ -338,6 +338,9 @@ public final class ErrorMessages {
   // for reasoning
   public static final int ERROR_REASONER_FAILED = 12100;
   public static final int ERROR_REASONER_NO_MODEL = 12101;
+
+  // for solid
+  public static final int ERROR_SOLID_UPDATE_FAILED = 12200;
   
   // Mapping of error numbers to error message format strings.
   private static final Map<Integer, String> errorMessages;

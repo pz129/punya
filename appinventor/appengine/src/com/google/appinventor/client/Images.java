@@ -815,6 +815,9 @@ public interface Images extends Resources {
 
   @Source("com/google/appinventor/images/reasoner.png")
   ImageResource reasoner();
+
+  @Source("com/google/appinventor/images/solid.png")
+  ImageResource solid();
   
   /**
    * Media icon: image
