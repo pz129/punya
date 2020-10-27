@@ -5,10 +5,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.DesignerProperty;
+import com.google.appinventor.components.annotations.PropertyCategory;
 import com.google.appinventor.components.annotations.SimpleFunction;
 import com.google.appinventor.components.annotations.SimpleObject;
 import com.google.appinventor.components.annotations.SimpleProperty;
@@ -21,8 +23,10 @@ import com.google.appinventor.components.common.PunyaVersion;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.util.JsonUtil;
 import com.google.appinventor.components.runtime.util.YailDictionary;
+import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.sparql.vocabulary.FOAF;
@@ -37,7 +41,7 @@ import org.json.JSONException;
     iconName = "images/solid.png",
     category = ComponentCategory.LINKEDDATA)
 @SimpleObject
-//@UsesAssets(fileNames = "solid.html")
+@UsesAssets(fileNames = "popup.html")
 @UsesActivities(activities = {
     @ActivityElement(name = "com.google.appinventor.components.runtime.SOLID$LoginActivity")
 })
@@ -72,7 +76,7 @@ public class SOLID extends LinkedDataBase<Model> implements ActivityResultListen
 
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_BOOLEAN,
       defaultValue = "True")
-  @SimpleProperty
+  @SimpleProperty(category = PropertyCategory.BEHAVIOR)
   public void CacheAuthentication(boolean cache) {
     cacheAuth = cache;
   }
@@ -83,7 +87,7 @@ public class SOLID extends LinkedDataBase<Model> implements ActivityResultListen
   }
 
   @DesignerProperty(editorType = PropertyTypeConstants.PROPERTY_TYPE_ASSET)
-  @SimpleProperty
+  @SimpleProperty(category = PropertyCategory.BEHAVIOR)
   public void WebID(String webId) {
     this.webId = webId;
   }
@@ -102,6 +106,37 @@ public class SOLID extends LinkedDataBase<Model> implements ActivityResultListen
 
   /// region Methods
 
+  public void AddObjectStatement(String subject, String property, String object) {
+    Resource s = model.getResource(subject);
+    Property p = model.getProperty(property);
+    Resource o = model.getResource(object);
+    model.add(s, p, o);
+  }
+
+  public void AddDataStatement(String subject, String property, String object, String dataType) {
+    Resource s = model.getResource(subject);
+    Property p = model.getProperty(property);
+    Literal o;
+    if (TextUtils.isEmpty(dataType)) {
+      o = model.createLiteral(object);
+    } else {
+      o = model.createTypedLiteral(object, dataType);
+    }
+    model.add(s, p, o);
+  }
+
+  public void AddLanguageStatement(String subject, String property, String object, String language) {
+    Resource s = model.getResource(subject);
+    Property p = model.getProperty(property);
+    Literal o;
+    if (TextUtils.isEmpty(language)) {
+      o = model.createLiteral(object);
+    } else {
+      o = model.createLiteral(object, language);
+    }
+    model.add(s, p, o);
+  }
+
   public void Login() {
     Intent intent = new Intent(form, LoginActivity.class);
   }
@@ -115,10 +150,20 @@ public class SOLID extends LinkedDataBase<Model> implements ActivityResultListen
     }
   }
 
+  @SimpleFunction
+  public void ReadGraph(String relativePath) {
+  }
+
+  @SimpleFunction
+  public void WriteGraph(String relativePath) {
+  }
+
+  @SimpleFunction
   public Object GetProperty(String subject, String property) {
     return null;
   }
 
+  @SimpleFunction
   public List<Object> GetPropertyValues(String subject, String property) {
     return null;
   }
