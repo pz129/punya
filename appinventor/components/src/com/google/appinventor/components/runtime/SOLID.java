@@ -3,9 +3,15 @@ package com.google.appinventor.components.runtime;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.util.Log;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import com.google.appinventor.components.annotations.DesignerComponent;
@@ -30,10 +36,13 @@ import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.sparql.vocabulary.FOAF;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 @DesignerComponent(
     version = PunyaVersion.SOLID_COMPONENT_VERSION,
@@ -46,6 +55,8 @@ import org.json.JSONException;
     @ActivityElement(name = "com.google.appinventor.components.runtime.SOLID$LoginActivity")
 })
 public class SOLID extends LinkedDataBase<Model> implements ActivityResultListener {
+
+  private static final String LOG_TAG = SOLID.class.getSimpleName();
 
   private boolean cacheAuth = true;
   private YailDictionary authDetails = null;
@@ -137,10 +148,13 @@ public class SOLID extends LinkedDataBase<Model> implements ActivityResultListen
     model.add(s, p, o);
   }
 
+  @SimpleFunction
   public void Login() {
     Intent intent = new Intent(form, LoginActivity.class);
+    form.startActivityForResult(intent, 9999);
   }
 
+  @SimpleFunction
   public void Logout() {
     authDetails = null;
     model.removeAll();
@@ -244,10 +258,12 @@ public class SOLID extends LinkedDataBase<Model> implements ActivityResultListen
   }
 
   public static class LoginActivity extends AppInventorCompatActivity {
+    private WebView webview;
+
     @Override
     public void onCreate(Bundle icicle) {
       super.onCreate(icicle);
-      WebView webview = new WebView(this);
+      webview = new WebView(this);
       webview.getSettings().setJavaScriptEnabled(true);
       webview.setWebViewClient(new WebViewClient() {
         @Override
@@ -264,8 +280,104 @@ public class SOLID extends LinkedDataBase<Model> implements ActivityResultListen
           }
           return true;
         }
+
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+          Log.d(LOG_TAG, "Loading " + request.getUrl().toString());
+          if (request.getUrl().toString().equals("http://localhost/popup.html")) {
+            try {
+              return new WebResourceResponse("text/html", "utf-8", LoginActivity.this.getAssets().open("popup.html"));
+            } catch (IOException e) {
+              Log.e(LOG_TAG, "Unable to read popup.html", e);
+              return super.shouldInterceptRequest(view, request);
+            }
+          }
+          return super.shouldInterceptRequest(view, request);
+        }
       });
+      webview.addJavascriptInterface(new FakeOpener(), "SOLID");
       setContentView(webview);
+      webview.loadUrl("http://localhost/popup.html");
+      WebView.setWebContentsDebuggingEnabled(true);
+    }
+
+    public class FakeOpener {
+      SharedPreferences prefs = getSharedPreferences("solid-auth-client", MODE_PRIVATE);
+
+      @JavascriptInterface
+      public void postMessage(String args) {
+        Log.d(LOG_TAG, "message = " + args);
+        try {
+          JSONObject object = new JSONObject(args);
+          object = object.getJSONObject("solid-auth-client");
+          String message = object.getString("method");
+          if ("getAppOrigin".equals(message)) {
+            JSONObject response = new JSONObject();
+            response.put("id", object.getDouble("id"));
+            response.put("ret", getApplication().getPackageName());
+            JSONObject wrapper = new JSONObject();
+            wrapper.put("solid-auth-client", response);
+            final String wrapperStr = wrapper.toString();
+            runOnUiThread(new Runnable() {
+              @Override
+              public void run() {
+                webview.evaluateJavascript("window.dispatchEvent(new MessageEvent('message', {data:" + wrapperStr + "}))", null);
+              }
+            });
+          } else if ("getLoginOptions".equals(message)) {
+            JSONObject response = new JSONObject();
+            response.put("popupUri", "http://localhost/popup.html");
+            response.put("callbackUri", "http://localhost/popup.html");
+            JSONObject ret = new JSONObject();
+            ret.put("id", object.getDouble("id"));
+            ret.put("ret", response);
+            JSONObject wrapper = new JSONObject();
+            wrapper.put("solid-auth-client", ret);
+            final String wrapperStr = wrapper.toString();
+            runOnUiThread(new Runnable() {
+              @Override
+              public void run() {
+                webview.evaluateJavascript("window.dispatchEvent(new MessageEvent('message', {data:" + wrapperStr + "}))", null);
+              }
+            });
+          } else if ("storage/getItem".equals(message)) {
+            JSONArray actionArgs = object.getJSONArray("solid-auth-client");
+            String resultData = prefs.getString(actionArgs.getString(0), "");
+            JSONObject ret = new JSONObject();
+            ret.put("id", object.getDouble("id"));
+            ret.put("ret", resultData);
+            JSONObject wrapper = new JSONObject();
+            wrapper.put("solid-auth-client", ret);
+            final String wrapperStr = wrapper.toString();
+            runOnUiThread(new Runnable() {
+              @Override
+              public void run() {
+                webview.evaluateJavascript("window.dispatchEvent(new MessageEvent('message', {data:" + wrapperStr + "}))", null);
+              }
+            });
+          } else if ("storage/setItem".equals(message)) {
+          } else if ("storage/removeItem".equals(message)) {
+          } else {
+            Log.w(LOG_TAG, "Unknown message " + message);
+          }
+        } catch (JSONException e) {
+          e.printStackTrace();
+        }
+      }
+
+      @JavascriptInterface
+      public void gotSession(String auth) {
+        Log.d(LOG_TAG, "session = " + auth);
+        final Intent result = new Intent();
+        result.putExtra("auth", auth);
+        runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+            setResult(RESULT_OK, result);
+            finish();
+          }
+        });
+      }
     }
   }
 }
