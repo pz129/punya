@@ -63,6 +63,7 @@ public class SOLID extends LinkedDataBase<Model> implements ActivityResultListen
   private String webId = "";
   private boolean writePending = false;
   private final Executor threadPool = Executors.newSingleThreadExecutor();
+  private String dataPod = "";
 
   /**
    * Creates a new AndroidNonvisibleComponent.
@@ -165,11 +166,13 @@ public class SOLID extends LinkedDataBase<Model> implements ActivityResultListen
   }
 
   @SimpleFunction
-  public void ReadGraph(String relativePath) {
+  public boolean ReadGraph(String relativePath) {
+    return loadRemoteResource(dataPod+relativePath);
   }
 
   @SimpleFunction
-  public void WriteGraph(String relativePath) {
+  public boolean WriteGraph(String relativePath) {
+    return writeRemoteResource(dataPod+relativePath);
   }
 
   @SimpleFunction

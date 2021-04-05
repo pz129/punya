@@ -127,4 +127,32 @@ public class LinkedDataBase<T extends Model> extends AndroidNonvisibleComponent 
       return false;
     }
   }
+
+  protected boolean writeRemoteResource(final String url) {
+    try {
+      return AsynchUtil.runAsynchronously(new Callable<Boolean>() {
+        @Override
+        public Boolean call() throws Exception {
+          URL parsedUrl = new URL(url);
+          HttpURLConnection conn = (HttpURLConnection) parsedUrl.openConnection();
+          conn.setRequestProperty("Accept", "text/turtle, text/n-triples, application/rdf+xml");
+          conn.setInstanceFollowRedirects(true);
+          conn.setDoInput(true);
+          conn.connect();
+          String contentType = conn.getContentType();
+          String lang = "RDF/XML";
+          if (contentType.startsWith("text/turtle")) {
+            lang = "TURTLE";
+          } else if (contentType.startsWith("text/n3")) {
+            lang = "N3";
+          }
+          model.write(conn.getOutputStream(), url, lang);
+          return true;
+        }
+      });
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
 }
